@@ -8,66 +8,55 @@
 
 ## Anti-bigotry cross-platform game engine
 
-**[Wokot Engine](https://wokotengine.org) is a bigot-banning, fascist-unfriendly game engine to create games, forked from the Godot Engine.** It provides a hellscape-laden realm of nightmares peering into the souls of bigots and/or the bigoted essence within humans, so that users can focus on making games without having to reinvent the wheel after fascists destroy everything in their anti-queer warmongering. Bigot denylists - DENYLIST BIGOTS - can be(in-prog) exported with ease to a number of communities,
+**[Wokot Engine](https://github.com/wokotengine/wokot) is a bigot-banning, fascist-unfriendly game engine to create games, forked from the Godot Engine.** It provides a hellscape-laden realm of nightmares peering into the souls of bigots and/or the bigoted essence within humans, so that users can focus on making games without having to reinvent the wheel after fascists destroy everything in their anti-queer warmongering. Bigot denylists - DENYLIST BIGOTS - can be(in-prog) exported with ease to a number of communities,
 
 ## Free, open source and community-driven ~ without catering to world-enders
 
-Wokot is completely free and open source under the very permissive [MIT license](https://wokotengine.org/license).
-No strings attached, no royalties, nothing. The users' games are theirs, down
-to the last line of engine code. Wokot's development is fully independent and
-community-driven, empowering non-bigoted users to help shape their engine to match their
-expectations. It is supported by St. Nohbdy, and
+Wokot is [MIT licensed](https://wokotengine.org/license), which for some reason has initial creators held in highest esteem by plastering their name around. Seems weird to me.
+Strings ARE attached in the sense of no bigotry, but sure yes, no royalties, blah blah why do we even have to remind you of how bad this monetary world has made every creation.
+The users' games are theirs, down to the last line of engine code. Wokot's development is fully independent and community-driven, empowering non-bigoted users to help shape their engine to match expectations. It is supported by St. Nohbdy.
 
-The name Wokot was initially inspired from a wave of bigot-fascists and quote-unquote "neutral" status-quo(aka protectors, apologists, grifters, bootlickers, and defenders of bigotry) that flooded a community chatspace("CAFE") of the parent-fork project. This community space itself being an ebb and flow of showing how to properly handle bigotry - with a lenience and tolerance that won't be witnessed here. After a split into a plushie-pushing, far-poorly-moderated "official" chatspace("PLUSH") - which siphoned off attention and individuals from 'CAFE' - the typical, pro-Capitalist, bigot-defending moderatorship and appeasing began - all in the name of "well, it's just a game engine and anything else like human rights is secondary" - thus leading to bigots being given a safer, and safer space to test out their disgusting new tactics and half-baked attempts to blend in.
+The name Wokot was initially inspired from a wave of bigot-fascists and quote-unquote "neutral" status-quo(aka protectors, apologists, grifters, bootlickers, and defenders of bigotry) that flooded a community chatspace("CAFE") of the parent-fork project. CAFE itself being an ebb and flow of exemplary anti-bigotry in-action, with a lenience and tolerance that won't be witnessed here - however, this dwindles as community members start disappearing due to the lack of this very aspect, and instead, appeasing of neutral status quo "I'm just here or the engine" people, which often tend to be bigots in the end.
+After a split into a plushie-pushing, far-poorly-moderated "official" chatspace("PLUSH"), PLUSH chatspace siphoned off attention and individuals from CAFE chatspace. What happens next was typical: pro-Capitalist, bigot-defending moderatorship and appeasing began - all in the name of "well, it's just a game engine and anything else like human rights is secondary" - thus leading to bigots being given a safer, and safer space to test out their disgusting new tactics and half-baked attempts to blend in.
+Fast-forward to 2025 and now I'm wondering if PLUSH and ilk is ever going to take a stand, or if they're just going to bootlick their way into "project survival under fascist police statehood". Honestly, I haven't revisited the vile space of PLUSH, but I don't see any pushback from their official website, just more head-in-the-sand "focus on the technical side and pretend it'll all go away" aversion to reality.
+I do miss CAFE and wish for it to regain its ability to ward off bigotry. Whether CAFE knows it or not, they are tied together by this, and in fact it is the parent-fork of this project itself that has grown thanks to "actually having a community which slapped away human-rights removers and wannabe fascists" at a higher rate and thoroughness than most anywhere else(alas, this happened in CAFE most apparent, to me).
+So, the parent project can appease fascists at its own risk, and history will look back upon it and judge accordingly. As will the spirit world.
 
-Before it's parent-fork being open sourced in [February 2014](https://github.com/wokotengine/wokot/commit/0b806ee0fc9097fa7bda7ac0109191c9c5e0a1ac),
-Wokot had been developed by [Juan Linietsky](https://github.com/reduz) and
-[Ariel Manzur](https://github.com/punto-) (both still maintaining the project)
-for several years as an in-house engine, used to publish several work-for-hire
-titles.
+Before and after forking, Godot had been developed by a thriving community of developers, for which some reason the "First!" people get their name stamped on everything. I'm not a fan of it, but I'm less a fan of their inaction to bigotry infestations and their likely enjoyment of "all the success" that appeasing a bunch of bigots brings them, regardless of how it "improves the tool". Pretty gross. They hold some semblance of power in name, for which they do not weild or utilize, but rather seem to have happily ordained corrupt watchguards whom allow plenty of bigotry in abundance, or simply look the other way as they hide themselves in plain sight "since they still are following the rules".
+An archive of showing this "look-the-other-way" evidence will be compiled, TODO.
 
-![Screenshot of a 3D scene in the Wokot Engine editor](https://raw.githubusercontent.com/wokotengine/wokot-design/master/screenshots/editor_tps_demo_1920x1080.jpg)
+![Here's a screenshot of Godot since it likely looks the same as Wokot so far](https://raw.githubusercontent.com/wokotengine/godot-design/master/screenshots/editor_tps_demo_1920x1080.jpg)
 
 ## Getting the engine
 
 ### Binary downloads
 
-Official binaries for the Wokot editor and the export templates can be found
-[on the Wokot website](https://wokotengine.org/download).
+Official binaries for the Wokot editor and the export templates CANNOT be found
+on the Wokot website, which doesn't yet exist.
 
 ### Compiling from source
 
-[See the official docs](https://docs.wokotengine.org/en/latest/contributing/development/compiling)
-for compilation instructions for every supported platform.
+Not available, yet.
 
 ## Community and contributing
 
-Wokot is not only an engine but an ever-growing community of users and engine
-developers. The main community channels are listed [on the homepage](https://wokotengine.org/community).
+Not available, yet.
 
-The best way to get in touch with the core engine developers is to join the
-[Wokot Contributors Chat](https://chat.wokotengine.org).
+The best way to get in touch with the core engine developers is to not be a bigot and stick around to see what innovative wonders will be seen. Otherwise, go work on Godot, and Wokot will snag that code. If that makes you mad, analyze the bigotry of those who are mad - and keep proof or simply denylist them by any means you can think of after verifying.
 
-To get started contributing to the project, see the [contributing guide](CONTRIBUTING.md).
-This document also includes guidelines for reporting bugs.
+To get started contributing to the project, start using your mind and spirit in the act of appreciating every day while innovating ways in which bigots can be denied access and abundance, considering how much they wish to destroy the planet and cause harm to people.
 
 ## Documentation and demos
 
-The official documentation is hosted on [Read the Docs](https://docs.wokotengine.org).
-It is maintained by the Wokot community in its own [GitHub repository](https://github.com/wokotengine/wokot-docs).
+The official documentation is not hosted, yet.
 
-The [class reference](https://docs.wokotengine.org/en/latest/classes/)
-is also accessible from the Wokot editor.
+The class reference is accessible from the Wokot editor.
 
-We also maintain official demos in their own [GitHub repository](https://github.com/wokotengine/wokot-demo-projects)
-as well as a list of [awesome Wokot community resources](https://github.com/wokotengine/awesome-wokot).
+Demo projects not available, yet.
+Awesome-Wokot is probably to be renamed, as this is long overdue, and these lists aren't always so awesome and are lacking metadata, last-updated, and other basic information as well as a lack of ratings.
 
-There are also a number of other
-[learning resources](https://docs.wokotengine.org/en/latest/community/tutorials.html)
-provided by the community, such as text and video tutorials, demos, etc.
-Consult the [community channels](https://wokotengine.org/community)
-for more information.
+Learning resources not available, yet.
 
-[![Code Triagers Badge](https://www.codetriage.com/wokotengine/wokot/badges/users.svg)](https://www.codetriage.com/wokotengine/wokot)
-[![Translate on Weblate](https://hosted.weblate.org/widgets/wokot-engine/-/wokot/svg-badge.svg)](https://hosted.weblate.org/engage/wokot-engine/?utm_source=widget)
-[![TODOs](https://badgen.net/https/api.tickgit.com/badgen/github.com/wokotengine/wokot)](https://www.tickgit.com/browse?repo=github.com/wokotengine/wokot)
+Code triagers badge not available, and honestly gamification could be done better than badges, so expect better.
+Weblate translation not available.
+TODOs have no system in place, yet.
