@@ -649,17 +649,11 @@ void EditorNode::_notification(int p_what) {
 
 				OS::get_singleton()->benchmark_begin_measure("Editor", "First Scan");
 
-				if (run_surface_upgrade_tool) {
-					run_surface_upgrade_tool = false;
-					SurfaceUpgradeTool::get_singleton()->connect("upgrade_finished", callable_mp(EditorFileSystem::get_singleton(), &EditorFileSystem::scan), CONNECT_ONE_SHOT);
-					SurfaceUpgradeTool::get_singleton()->finish_upgrade();
-				} else if (run_uid_upgrade_tool) {
-					run_uid_upgrade_tool = false;
-					UIDUpgradeTool::get_singleton()->connect("upgrade_finished", callable_mp(EditorFileSystem::get_singleton(), &EditorFileSystem::scan), CONNECT_ONE_SHOT);
-					UIDUpgradeTool::get_singleton()->finish_upgrade();
-				} else {
-					EditorFileSystem::get_singleton()->scan();
+				if (run_surface_upgrade_tool || run_uid_upgrade_tool) {
+					EditorFileSystem::get_singleton()->connect("filesystem_changed", callable_mp(this, &EditorNode::_execute_upgrades), CONNECT_ONE_SHOT);
 				}
+
+				EditorFileSystem::get_singleton()->scan();
 			}
 		} break;
 
@@ -899,6 +893,20 @@ void EditorNode::_update_update_spinner() {
 	}
 
 	OS::get_singleton()->set_low_processor_usage_mode(!update_continuously);
+}
+
+void EditorNode::_execute_upgrades() {
+	if (run_surface_upgrade_tool) {
+		run_surface_upgrade_tool = false;
+		// Execute another scan to reimport the modified files.
+		SurfaceUpgradeTool::get_singleton()->connect("upgrade_finished", callable_mp(EditorFileSystem::get_singleton(), &EditorFileSystem::scan), CONNECT_ONE_SHOT);
+		SurfaceUpgradeTool::get_singleton()->finish_upgrade();
+	} else if (run_uid_upgrade_tool) {
+		run_uid_upgrade_tool = false;
+		// Execute another scan to reimport the modified files.
+		UIDUpgradeTool::get_singleton()->connect("upgrade_finished", callable_mp(EditorFileSystem::get_singleton(), &EditorFileSystem::scan), CONNECT_ONE_SHOT);
+		UIDUpgradeTool::get_singleton()->finish_upgrade();
+	}
 }
 
 void EditorNode::init_plugins() {
@@ -3710,7 +3718,9 @@ void EditorNode::set_addon_plugin_enabled(const String &p_addon, bool p_enabled,
 	// Only try to load the script if it has a name. Else, the plugin has no init script.
 	if (script_path.length() > 0) {
 		script_path = addon_path.get_base_dir().path_join(script_path);
-		scr = ResourceLoader::load(script_path, "Script", ResourceFormatLoader::CACHE_MODE_IGNORE);
+		// We should not use the cached version on startup to prevent a script reload
+		// if it is already loaded and potentially running from autoloads. See GH-100750.
+		scr = ResourceLoader::load(script_path, "Script", EditorFileSystem::get_singleton()->doing_first_scan() ? ResourceFormatLoader::CACHE_MODE_REUSE : ResourceFormatLoader::CACHE_MODE_IGNORE);
 
 		if (scr.is_null()) {
 			show_warning(vformat(TTR("Unable to load addon script from path: '%s'."), script_path));
@@ -4749,7 +4759,7 @@ Ref<Script> EditorNode::get_object_custom_type_base(const Object *p_object) cons
 
 	const Node *node = Object::cast_to<const Node>(p_object);
 	if (node && node->has_meta(SceneStringName(_custom_type_script))) {
-		return node->get_meta(SceneStringName(_custom_type_script));
+		return PropertyUtils::get_custom_type_script(node);
 	}
 
 	Ref<Script> scr = p_object->get_script();
@@ -4941,7 +4951,7 @@ Ref<Texture2D> EditorNode::get_class_icon(const String &p_class, const String &p
 	String script_path;
 	if (ScriptServer::is_global_class(p_class)) {
 		script_path = ScriptServer::get_global_class_path(p_class);
-	} else if (ResourceLoader::exists(p_class)) { // If the script is not a class_name we check if the script resource exists.
+	} else if (!p_class.get_extension().is_empty() && ResourceLoader::exists(p_class)) { // If the script is not a class_name we check if the script resource exists.
 		script_path = p_class;
 	}
 
@@ -5734,7 +5744,9 @@ void EditorNode::_cancel_close_scene_tab() {
 }
 
 void EditorNode::_prepare_save_confirmation_popup() {
-	save_confirmation->reparent(get_last_exclusive_window());
+	if (save_confirmation->get_window() != get_last_exclusive_window()) {
+		save_confirmation->reparent(get_last_exclusive_window());
+	}
 }
 
 void EditorNode::_toggle_distraction_free_mode() {
