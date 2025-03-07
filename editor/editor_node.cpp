@@ -1207,7 +1207,7 @@ void EditorNode::_sources_changed(bool p_exist) {
 		}
 
 		// Start preview thread now that it's safe.
-		if (!singleton->cmdline_export_mode) {
+		if (!singleton->cmdline_mode) {
 			EditorResourcePreview::get_singleton()->start();
 		}
 
@@ -1807,7 +1807,7 @@ void EditorNode::_save_scene_with_preview(String p_file, int p_idx) {
 	save_scene_progress->step(TTR("Saving Scene"), 4);
 	_save_scene(p_file, p_idx);
 
-	if (!singleton->cmdline_export_mode) {
+	if (!singleton->cmdline_mode) {
 		EditorResourcePreview::get_singleton()->check_for_invalidation(p_file);
 	}
 
@@ -1867,6 +1867,7 @@ int EditorNode::_save_external_resources(bool p_also_save_external_data) {
 		res->set_edited(false);
 	}
 
+	bool script_was_saved = false;
 	for (const String &E : edited_resources) {
 		Ref<Resource> res = ResourceCache::get_ref(E);
 		if (res.is_null()) {
@@ -1876,8 +1877,16 @@ int EditorNode::_save_external_resources(bool p_also_save_external_data) {
 		if (ps.is_valid()) {
 			continue; // Do not save PackedScenes, this will mess up the editor.
 		}
+		if (!script_was_saved) {
+			Ref<Script> scr = res;
+			script_was_saved = scr.is_valid();
+		}
 		ResourceSaver::save(res, res->get_path(), flg);
 		saved++;
+	}
+
+	if (script_was_saved) {
+		ScriptEditor::get_singleton()->update_script_times();
 	}
 
 	if (p_also_save_external_data) {
@@ -2057,61 +2066,29 @@ void EditorNode::try_autosave() {
 }
 
 void EditorNode::restart_editor(bool p_goto_project_manager) {
-	exiting = true;
-
-	if (project_run_bar->is_playing()) {
-		project_run_bar->stop_playing();
-	}
-
-	String to_reopen;
-	if (!p_goto_project_manager && get_tree()->get_edited_scene_root()) {
-		to_reopen = get_tree()->get_edited_scene_root()->get_scene_file_path();
-	}
-
-	_exit_editor(EXIT_SUCCESS);
-
-	List<String> args;
-	for (const String &a : Main::get_forwardable_cli_arguments(Main::CLI_SCOPE_TOOL)) {
-		args.push_back(a);
-	}
-
-	if (p_goto_project_manager) {
-		args.push_back("--project-manager");
-
-		// Setup working directory.
-		const String exec_dir = OS::get_singleton()->get_executable_path().get_base_dir();
-		if (!exec_dir.is_empty()) {
-			args.push_back("--path");
-			args.push_back(exec_dir);
-		}
-	} else {
-		args.push_back("--path");
-		args.push_back(ProjectSettings::get_singleton()->get_resource_path());
-
-		args.push_back("-e");
-	}
-
-	if (!to_reopen.is_empty()) {
-		args.push_back(to_reopen);
-	}
-
-	OS::get_singleton()->set_restart_on_exit(true, args);
+	_menu_option_confirm(p_goto_project_manager ? PROJECT_QUIT_TO_PROJECT_MANAGER : PROJECT_RELOAD_CURRENT_PROJECT, false);
 }
 
 void EditorNode::_save_all_scenes() {
 	bool all_saved = true;
 	for (int i = 0; i < editor_data.get_edited_scene_count(); i++) {
-		Node *scene = editor_data.get_edited_scene_root(i);
-		if (scene) {
-			if (!scene->get_scene_file_path().is_empty() && DirAccess::exists(scene->get_scene_file_path().get_base_dir())) {
-				if (i != editor_data.get_edited_scene()) {
-					_save_scene(scene->get_scene_file_path(), i);
-				} else {
-					_save_scene_with_preview(scene->get_scene_file_path());
-				}
-			} else if (!scene->get_scene_file_path().is_empty()) {
-				all_saved = false;
-			}
+		if (!_is_scene_unsaved(i)) {
+			continue;
+		}
+
+		const Node *scene = editor_data.get_edited_scene_root(i);
+		ERR_FAIL_NULL(scene);
+
+		const String &scene_path = scene->get_scene_file_path();
+		if (!scene_path.is_empty() && !DirAccess::exists(scene_path.get_base_dir())) {
+			all_saved = false;
+			continue;
+		}
+
+		if (i == editor_data.get_edited_scene()) {
+			_save_scene_with_preview(scene_path);
+		} else {
+			_save_scene(scene_path, i);
 		}
 	}
 
@@ -2137,6 +2114,28 @@ void EditorNode::_mark_unsaved_scenes() {
 
 	_update_title();
 	scene_tabs->update_scene_tabs();
+}
+
+bool EditorNode::_is_scene_unsaved(int p_idx) {
+	const Node *scene = editor_data.get_edited_scene_root(p_idx);
+	if (!scene) {
+		return false;
+	}
+
+	if (EditorUndoRedoManager::get_singleton()->is_history_unsaved(editor_data.get_scene_history_id(p_idx))) {
+		return true;
+	}
+
+	const String &scene_path = scene->get_scene_file_path();
+	if (!scene_path.is_empty()) {
+		// Check if scene has unsaved changes in built-in resources.
+		for (int j = 0; j < editor_data.get_editor_plugin_count(); j++) {
+			if (!editor_data.get_editor_plugin(j)->get_unsaved_status(scene_path).is_empty()) {
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 void EditorNode::_dialog_action(String p_file) {
@@ -3480,15 +3479,29 @@ void EditorNode::_discard_changes(const String &p_str) {
 
 		} break;
 		case PROJECT_QUIT_TO_PROJECT_MANAGER: {
-			restart_editor(true);
+			_restart_editor(true);
 		} break;
 		case PROJECT_RELOAD_CURRENT_PROJECT: {
-			restart_editor();
+			_restart_editor();
 		} break;
 	}
 }
 
 void EditorNode::_update_file_menu_opened() {
+	bool has_unsaved = false;
+	for (int i = 0; i < editor_data.get_edited_scene_count(); i++) {
+		if (_is_scene_unsaved(i)) {
+			has_unsaved = true;
+			break;
+		}
+	}
+	if (has_unsaved) {
+		file_menu->set_item_disabled(file_menu->get_item_index(FILE_SAVE_ALL_SCENES), false);
+		file_menu->set_item_tooltip(file_menu->get_item_index(FILE_SAVE_ALL_SCENES), String());
+	} else {
+		file_menu->set_item_disabled(file_menu->get_item_index(FILE_SAVE_ALL_SCENES), true);
+		file_menu->set_item_tooltip(file_menu->get_item_index(FILE_SAVE_ALL_SCENES), TTR("All scenes are already saved."));
+	}
 	file_menu->set_item_disabled(file_menu->get_item_index(FILE_OPEN_PREV), previous_scenes.is_empty());
 	_update_undo_redo_allowed();
 }
@@ -4982,7 +4995,7 @@ bool EditorNode::is_object_of_custom_type(const Object *p_object, const StringNa
 void EditorNode::progress_add_task(const String &p_task, const String &p_label, int p_steps, bool p_can_cancel) {
 	if (!singleton) {
 		return;
-	} else if (singleton->cmdline_export_mode) {
+	} else if (singleton->cmdline_mode) {
 		print_line(p_task + ": begin: " + p_label + " steps: " + itos(p_steps));
 	} else if (singleton->progress_dialog) {
 		singleton->progress_dialog->add_task(p_task, p_label, p_steps, p_can_cancel);
@@ -4992,7 +5005,7 @@ void EditorNode::progress_add_task(const String &p_task, const String &p_label, 
 bool EditorNode::progress_task_step(const String &p_task, const String &p_state, int p_step, bool p_force_refresh) {
 	if (!singleton) {
 		return false;
-	} else if (singleton->cmdline_export_mode) {
+	} else if (singleton->cmdline_mode) {
 		print_line("\t" + p_task + ": step " + itos(p_step) + ": " + p_state);
 		return false;
 	} else if (singleton->progress_dialog) {
@@ -5005,7 +5018,7 @@ bool EditorNode::progress_task_step(const String &p_task, const String &p_state,
 void EditorNode::progress_end_task(const String &p_task) {
 	if (!singleton) {
 		return;
-	} else if (singleton->cmdline_export_mode) {
+	} else if (singleton->cmdline_mode) {
 		print_line(p_task + ": end");
 	} else if (singleton->progress_dialog) {
 		singleton->progress_dialog->end_task(p_task);
@@ -5258,7 +5271,7 @@ Error EditorNode::export_preset(const String &p_preset, const String &p_path, bo
 	export_defer.android_build_template = p_android_build_template;
 	export_defer.patch = p_patch;
 	export_defer.patches = p_patches;
-	cmdline_export_mode = true;
+	cmdline_mode = true;
 	return OK;
 }
 
@@ -5508,11 +5521,11 @@ bool EditorNode::has_scenes_in_session() {
 }
 
 void EditorNode::undo() {
-	trigger_menu_option(FILE_UNDO, true);
+	_menu_option_confirm(FILE_UNDO, true);
 }
 
 void EditorNode::redo() {
-	trigger_menu_option(FILE_REDO, true);
+	_menu_option_confirm(FILE_REDO, true);
 }
 
 bool EditorNode::ensure_main_scene(bool p_from_native) {
@@ -5678,6 +5691,48 @@ void EditorNode::_proceed_closing_scene_tabs() {
 
 bool EditorNode::_is_closing_editor() const {
 	return tab_closing_menu_option == FILE_QUIT || tab_closing_menu_option == PROJECT_QUIT_TO_PROJECT_MANAGER || tab_closing_menu_option == PROJECT_RELOAD_CURRENT_PROJECT;
+}
+
+void EditorNode::_restart_editor(bool p_goto_project_manager) {
+	exiting = true;
+
+	if (project_run_bar->is_playing()) {
+		project_run_bar->stop_playing();
+	}
+
+	String to_reopen;
+	if (!p_goto_project_manager && get_tree()->get_edited_scene_root()) {
+		to_reopen = get_tree()->get_edited_scene_root()->get_scene_file_path();
+	}
+
+	_exit_editor(EXIT_SUCCESS);
+
+	List<String> args;
+	for (const String &a : Main::get_forwardable_cli_arguments(Main::CLI_SCOPE_TOOL)) {
+		args.push_back(a);
+	}
+
+	if (p_goto_project_manager) {
+		args.push_back("--project-manager");
+
+		// Setup working directory.
+		const String exec_dir = OS::get_singleton()->get_executable_path().get_base_dir();
+		if (!exec_dir.is_empty()) {
+			args.push_back("--path");
+			args.push_back(exec_dir);
+		}
+	} else {
+		args.push_back("--path");
+		args.push_back(ProjectSettings::get_singleton()->get_resource_path());
+
+		args.push_back("-e");
+	}
+
+	if (!to_reopen.is_empty()) {
+		args.push_back(to_reopen);
+	}
+
+	OS::get_singleton()->set_restart_on_exit(true, args);
 }
 
 void EditorNode::_scene_tab_closed(int p_tab) {
@@ -6806,7 +6861,7 @@ int EditorNode::execute_and_show_output(const String &p_title, const String &p_p
 		{
 			MutexLock lock(eta.execute_output_mutex);
 			if (prev_len != eta.output.length()) {
-				String to_add = eta.output.substr(prev_len, eta.output.length());
+				String to_add = eta.output.substr(prev_len);
 				prev_len = eta.output.length();
 				execute_outputs->add_text(to_add);
 				DisplayServer::get_singleton()->process_events(); // Get rid of pending events.
@@ -6844,7 +6899,10 @@ EditorNode::EditorNode() {
 	DEV_ASSERT(!singleton);
 	singleton = this;
 
-	set_translation_domain("godot.editor");
+	// Detecting headless mode, that means the editor is running in command line.
+	if (!DisplayServer::get_singleton()->window_can_draw()) {
+		cmdline_mode = true;
+	}
 
 	Resource::_get_local_scene_func = _resource_get_edited_scene;
 

@@ -856,9 +856,9 @@ bool EditorExportPlatformAndroid::_has_manage_external_storage_permission(const 
 }
 
 bool EditorExportPlatformAndroid::_uses_vulkan() {
-	String current_renderer = GLOBAL_GET("rendering/renderer/rendering_method.mobile");
-	bool uses_vulkan = (current_renderer == "forward_plus" || current_renderer == "mobile") && GLOBAL_GET("rendering/rendering_device/driver.android") == "vulkan";
-	return uses_vulkan;
+	String rendering_method = GLOBAL_GET("rendering/renderer/rendering_method.mobile");
+	String rendering_driver = GLOBAL_GET("rendering/rendering_device/driver.android");
+	return (rendering_method == "forward_plus" || rendering_method == "mobile") && rendering_driver == "vulkan";
 }
 
 void EditorExportPlatformAndroid::_notification(int p_what) {
@@ -1629,7 +1629,7 @@ void EditorExportPlatformAndroid::_fix_resources(const Ref<EditorExportPreset> &
 				str = get_project_name(package_name);
 
 			} else {
-				String lang = str.substr(str.rfind_char('-') + 1, str.length()).replace("-", "_");
+				String lang = str.substr(str.rfind_char('-') + 1).replace("-", "_");
 				if (appnames.has(lang)) {
 					str = appnames[lang];
 				} else {
@@ -2065,6 +2065,9 @@ bool EditorExportPlatformAndroid::get_export_option_visibility(const EditorExpor
 		return false;
 	}
 
+	if (p_option == "dotnet/android_use_linux_bionic") {
+		return advanced_options_enabled;
+	}
 	return true;
 }
 

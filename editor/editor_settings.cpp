@@ -103,14 +103,6 @@ bool EditorSettings::_set_only(const StringName &p_name, const Variant &p_value)
 
 			builtin_action_overrides[action_name].clear();
 			for (int ev_idx = 0; ev_idx < events.size(); ev_idx++) {
-#ifndef DISABLE_DEPRECATED
-				// -3 was introduced in GH-97707 as a way to prevent a clash in device IDs, but as reported in GH-99243, this leads to problems.
-				// -3 was used during dev-releases, so this conversion helps to revert such affected editor shortcuts.
-				Ref<InputEvent> x = events[ev_idx];
-				if (x.is_valid() && x->get_device() == -3) {
-					x->set_device(-1);
-				}
-#endif // DISABLE_DEPRECATED
 				im->action_add_event(action_name, events[ev_idx]);
 				builtin_action_overrides[action_name].push_back(events[ev_idx]);
 			}
@@ -718,6 +710,7 @@ void EditorSettings::_load_defaults(Ref<ConfigFile> p_extra_config) {
 	_initial_set("text_editor/behavior/files/auto_reload_scripts_on_external_change", false);
 	_initial_set("text_editor/behavior/files/auto_reload_and_parse_scripts_on_save", true);
 	_initial_set("text_editor/behavior/files/open_dominant_script_on_scene_change", false, true);
+	_initial_set("text_editor/behavior/files/drop_preload_resources_as_uid", true, true);
 
 	// Behavior: Documentation
 	_initial_set("text_editor/behavior/documentation/enable_tooltips", true, true);
@@ -982,6 +975,7 @@ void EditorSettings::_load_defaults(Ref<ConfigFile> p_extra_config) {
 
 	// SSL
 	EDITOR_SETTING_USAGE(Variant::STRING, PROPERTY_HINT_GLOBAL_FILE, "network/tls/editor_tls_certificates", _SYSTEM_CERTS_PATH, "*.crt,*.pem", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_RESTART_IF_CHANGED);
+	EDITOR_SETTING_BASIC(Variant::BOOL, PROPERTY_HINT_NONE, "network/tls/enable_tls_v1.3", true, "")
 
 	// Debug
 	_initial_set("network/debug/remote_host", "127.0.0.1"); // Hints provided in setup_network

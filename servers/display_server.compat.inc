@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  xr_face_modifier_3d.h                                                 */
+/*  display_server.compat.inc                                             */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,46 +28,19 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef XR_FACE_MODIFIER_3D_H
-#define XR_FACE_MODIFIER_3D_H
+#ifndef DISABLE_DEPRECATED
 
-#include "mesh_instance_3d.h"
-#include "scene/3d/node_3d.h"
+Error DisplayServer::_file_dialog_show_bind_compat_98194(const String &p_title, const String &p_current_directory, const String &p_filename, bool p_show_hidden, FileDialogMode p_mode, const Vector<String> &p_filters, const Callable &p_callback) {
+	return file_dialog_show(p_title, p_current_directory, p_filename, p_show_hidden, p_mode, p_filters, p_callback, MAIN_WINDOW_ID);
+}
 
-/**
-	The XRFaceModifier3D node drives the blend shapes of a MeshInstance3D
-	with facial expressions from an XRFaceTracking instance.
+Error DisplayServer::_file_dialog_with_options_show_bind_compat_98194(const String &p_title, const String &p_current_directory, const String &p_root, const String &p_filename, bool p_show_hidden, FileDialogMode p_mode, const Vector<String> &p_filters, const TypedArray<Dictionary> &p_options, const Callable &p_callback) {
+	return file_dialog_with_options_show(p_title, p_current_directory, p_root, p_filename, p_show_hidden, p_mode, p_filters, p_options, p_callback, MAIN_WINDOW_ID);
+}
 
-	The blend shapes provided by the mesh are interrogated, and used to
-	deduce an optimal mapping from the Unified Expressions blend shapes
-	provided by the	XRFaceTracking instance to drive the face.
- */
+void DisplayServer::_bind_compatibility_methods() {
+	ClassDB::bind_compatibility_method(D_METHOD("file_dialog_show", "title", "current_directory", "filename", "show_hidden", "mode", "filters", "callback"), &DisplayServer::_file_dialog_show_bind_compat_98194);
+	ClassDB::bind_compatibility_method(D_METHOD("file_dialog_with_options_show", "title", "current_directory", "root", "filename", "show_hidden", "mode", "filters", "options", "callback"), &DisplayServer::_file_dialog_with_options_show_bind_compat_98194);
+}
 
-class XRFaceModifier3D : public Node3D {
-	GDCLASS(XRFaceModifier3D, Node3D);
-
-private:
-	StringName tracker_name = "/user/face_tracker";
-	NodePath target;
-
-	// Map from XRFaceTracker blend shape index to mesh blend shape index.
-	RBMap<int, int> blend_mapping;
-
-	MeshInstance3D *get_mesh_instance() const;
-	void _get_blend_data();
-	void _update_face_blends() const;
-
-protected:
-	static void _bind_methods();
-
-public:
-	void set_face_tracker(const StringName &p_tracker_name);
-	StringName get_face_tracker() const;
-
-	void set_target(const NodePath &p_target);
-	NodePath get_target() const;
-
-	void _notification(int p_what);
-};
-
-#endif // XR_FACE_MODIFIER_3D_H
+#endif
