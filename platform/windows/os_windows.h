@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef OS_WINDOWS_H
-#define OS_WINDOWS_H
+#pragma once
 
 #include "crash_handler_windows.h"
 #include "key_mapping_windows.h"
@@ -137,6 +136,9 @@ class OS_Windows : public OS {
 
 	bool is_using_con_wrapper() const;
 
+	HashMap<String, int> encodings;
+	void _init_encodings();
+
 	// functions used by main to initialize/deinitialize the OS
 protected:
 	virtual void initialize() override;
@@ -242,6 +244,9 @@ public:
 
 	virtual bool _check_internal_feature_support(const String &p_feature) override;
 
+	virtual String multibyte_to_string(const String &p_encoding, const PackedByteArray &p_array) const override;
+	virtual PackedByteArray string_to_multibyte(const String &p_encoding, const String &p_string) const override;
+
 	virtual void disable_crash_handler() override;
 	virtual bool is_disable_crash_handler() const override;
 	virtual void initialize_debugging() override;
@@ -259,5 +264,3 @@ public:
 	OS_Windows(HINSTANCE _hInstance);
 	~OS_Windows();
 };
-
-#endif // OS_WINDOWS_H

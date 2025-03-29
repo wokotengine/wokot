@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef TEST_PROJECTION_H
-#define TEST_PROJECTION_H
+#pragma once
 
 #include "core/math/aabb.h"
 #include "core/math/plane.h"
@@ -182,12 +181,6 @@ TEST_CASE("[Projection] Vector transformation") {
 			Vector4(2, 6, 11, 15),
 			Vector4(4, 7, 11, 15),
 			Vector4(4, 8, 12, 16));
-
-	Projection inverse(
-			Vector4(-4.0 / 12, 0, 1, -8.0 / 12),
-			Vector4(8.0 / 12, -1, -1, 16.0 / 12),
-			Vector4(-20.0 / 12, 2, -1, 5.0 / 12),
-			Vector4(1, -1, 1, -0.75));
 
 	Vector4 vec4(1, 2, 3, 4);
 	CHECK(proj.xform(vec4).is_equal_approx(Vector4(33, 70, 112, 152)));
@@ -699,5 +692,3 @@ TEST_CASE("[Projection] Pixels per meter") {
 	CHECK(ppm == 400);
 }
 } //namespace TestProjection
-
-#endif // TEST_PROJECTION_H

@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef TEST_CONTROL_H
-#define TEST_CONTROL_H
+#pragma once
 
 #include "scene/2d/node_2d.h"
 #include "scene/gui/control.h"
@@ -1035,8 +1034,7 @@ TEST_CASE("[SceneTree][Control] Grow direction") {
 	}
 
 	SIGNAL_WATCH(test_control, SNAME("minimum_size_changed"))
-	Array signal_args;
-	signal_args.push_back(Array());
+	Array signal_args = { {} };
 
 	SUBCASE("Horizontal grow direction begin") {
 		test_control->set_h_grow_direction(Control::GROW_DIRECTION_BEGIN);
@@ -1109,5 +1107,3 @@ TEST_CASE("[SceneTree][Control] Grow direction") {
 }
 
 } // namespace TestControl
-
-#endif // TEST_CONTROL_H

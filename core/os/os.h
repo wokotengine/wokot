@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef OS_H
-#define OS_H
+#pragma once
 
 #include "core/config/engine.h"
 #include "core/io/logger.h"
@@ -266,6 +265,9 @@ public:
 	virtual void set_crash_handler_silent() { _silent_crash_handler = true; }
 	virtual bool is_crash_handler_silent() { return _silent_crash_handler; }
 
+	virtual String multibyte_to_string(const String &p_encoding, const PackedByteArray &p_array) const;
+	virtual PackedByteArray string_to_multibyte(const String &p_encoding, const String &p_string) const;
+
 	virtual void disable_crash_handler() {}
 	virtual bool is_disable_crash_handler() const { return false; }
 	virtual void initialize_debugging() {}
@@ -369,5 +371,3 @@ public:
 	OS();
 	virtual ~OS();
 };
-
-#endif // OS_H

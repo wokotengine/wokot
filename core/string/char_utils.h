@@ -28,14 +28,16 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef CHAR_UTILS_H
-#define CHAR_UTILS_H
+#pragma once
 
 #include "core/typedefs.h"
 
 #include "char_range.inc"
 
 #include <iterator>
+
+static constexpr char hex_char_table_upper[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+static constexpr char hex_char_table_lower[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
 #define BSEARCH_CHAR_RANGE(m_array)                \
 	int low = 0;                                   \
@@ -133,5 +135,3 @@ constexpr bool is_punct(char32_t p_char) {
 constexpr bool is_underscore(char32_t p_char) {
 	return (p_char == '_');
 }
-
-#endif // CHAR_UTILS_H

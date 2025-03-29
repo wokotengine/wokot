@@ -187,7 +187,7 @@ void EditorAutoloadSettings::_autoload_edited() {
 
 	if (column == 0) {
 		String name = ti->get_text(0);
-		String old_name = selected_autoload.get_slice("/", 1);
+		String old_name = selected_autoload.get_slicec('/', 1);
 
 		if (name == old_name) {
 			return;
@@ -349,11 +349,7 @@ void EditorAutoloadSettings::_autoload_activated() {
 }
 
 void EditorAutoloadSettings::_autoload_open(const String &fpath) {
-	if (ResourceLoader::get_resource_type(fpath) == "PackedScene") {
-		EditorNode::get_singleton()->open_request(fpath);
-	} else {
-		EditorNode::get_singleton()->load_resource(fpath);
-	}
+	EditorNode::get_singleton()->load_scene_or_resource(fpath);
 	ProjectSettingsEditor::get_singleton()->hide();
 }
 
@@ -483,7 +479,7 @@ void EditorAutoloadSettings::update_autoload() {
 			continue;
 		}
 
-		String name = pi.name.get_slice("/", 1);
+		String name = pi.name.get_slicec('/', 1);
 		String scr_path = GLOBAL_GET(pi.name);
 
 		if (name.is_empty()) {
@@ -862,7 +858,7 @@ EditorAutoloadSettings::EditorAutoloadSettings() {
 			continue;
 		}
 
-		String name = pi.name.get_slice("/", 1);
+		String name = pi.name.get_slicec('/', 1);
 		String scr_path = GLOBAL_GET(pi.name);
 
 		if (name.is_empty()) {

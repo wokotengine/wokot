@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef DISPLAY_SERVER_WINDOWS_H
-#define DISPLAY_SERVER_WINDOWS_H
+#pragma once
 
 #include "crash_handler_windows.h"
 #include "joypad_windows.h"
@@ -654,6 +653,7 @@ class DisplayServerWindows : public DisplayServer {
 	void _set_mouse_mode_impl(MouseMode p_mode);
 	WindowID _get_focused_window_or_popup() const;
 	void _register_raw_input_devices(WindowID p_target_window);
+	bool _has_moving_window() const;
 
 	void _process_activate_event(WindowID p_window_id);
 	void _process_key_events();
@@ -888,5 +888,3 @@ public:
 	DisplayServerWindows(const String &p_rendering_driver, WindowMode p_mode, VSyncMode p_vsync_mode, uint32_t p_flags, const Vector2i *p_position, const Vector2i &p_resolution, int p_screen, Context p_context, int64_t p_parent_window, Error &r_error);
 	~DisplayServerWindows();
 };
-
-#endif // DISPLAY_SERVER_WINDOWS_H
