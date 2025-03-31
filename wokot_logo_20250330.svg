@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<svg width="480" height="480" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <!-- Created with SVG-edit - https://github.com/SVG-Edit/svgedit-->
+ <defs>
+  <linearGradient fx="1" fy="0.52" id="svg_3" spreadMethod="pad" x1="0.5" x2="0.26" y1="0.77" y2="0.33">
+   <stop id="jq_stop_1087" offset="0" stop-color="#ff00ff" stop-opacity="1"/>
+   <stop id="jq_stop_1462" offset="1" stop-color="#ffc4ff" stop-opacity="1"/>
+  </linearGradient>
+  <linearGradient fx="0.57" fy="0.63" id="svg_6" spreadMethod="reflect" x1="0.64" x2="0.66" y1="0.57" y2="0.59">
+   <stop id="jq_stop_4841" offset="0.8" stop-color="#ff7ad2" stop-opacity="0.99"/>
+   <stop id="jq_stop_3676" offset="1" stop-color="#70fff3" stop-opacity="0.98"/>
+  </linearGradient>
+  <radialGradient cx="0.57" cy="0.8" fx="0.5" fy="0.5" gradientTransform="rotate(-17,0.57421875,0.796875) translate(0.26414062499999996,0) scale(0.54,1)" id="svg_32" r="0.34" spreadMethod="reflect" y1="1" y2="1">
+   <stop id="jq_stop_7432" offset="0.45" stop-color="#632082" stop-opacity="1"/>
+   <stop id="jq_stop_9864" offset="0.81" stop-color="#67cc3b"/>
+   <stop id="jq_stop_6910" offset="0.97" stop-color="#468c25" stop-opacity="1"/>
+  </radialGradient>
+ </defs>
+ <g class="layer" display="inline">
+  <title>Layer 1</title>
+  <g id="svg_39" transform="translate(0 62) translate(0 -93) translate(0 90) translate(0 -56) translate(0 59) translate(0 -58.13) translate(30 0) translate(-29.87 0) translate(17 25) matrix(1.26562 0 0 1.26562 -125.741 -84.2465)">
+   <ellipse cx="261" cy="249" fill="#7affef" id="svg_34" rx="113" ry="113" stroke="#00ffed" stroke-width="5"/>
+   <ellipse cx="230" cy="123.74" fill="url(#svg_32)" fill-opacity="0.11" id="svg_22" rx="90" ry="20.26" stroke="#ff00ff" stroke-opacity="0" stroke-width="44"/>
+   <ellipse cx="152" cy="182" fill="#9833c4" id="svg_10" rx="1" ry="4" stroke="url(#svg_3)" stroke-dasharray="2" stroke-width="44">WOKOT</ellipse>
+   <ellipse cx="256" cy="246" fill="url(#svg_6)" id="svg_1" rx="113" ry="113" stroke="url(#svg_3)" stroke-width="5"/>
+   <rect fill="#9833c4" height="56" id="svg_8" stroke="url(#svg_3)" stroke-dasharray="2" stroke-width="44" width="317" x="120" y="220"/>
+   <text fill="#000000" font-family="Serif" font-size="24" id="svg_7" letter-spacing="35" stroke="url(#svg_3)" stroke-width="0" text-anchor="middle" x="279" xml:space="preserve" y="254">WOKOT</text>
+   <ellipse cx="215" cy="247.5" fill="#9833c4" id="svg_9" rx="21" ry="80.5" stroke="url(#svg_3)" stroke-dasharray="2" stroke-width="44" transform="rotate(-180 215 247.5)">WOKOT</ellipse>
+   <ellipse cx="222" cy="248.5" fill="#9833c4" id="svg_11" rx="21" ry="25.5" stroke="url(#svg_3)" stroke-dasharray="2" stroke-width="44" transform="rotate(-180 222 248.5)">WOKOT</ellipse>
+   <text fill="#24595b" fill-opacity="0.57" font-family="Serif" font-size="24" id="svg_12" letter-spacing="35" stroke="url(#svg_3)" stroke-width="0" text-anchor="middle" x="279" xml:space="preserve" y="254">WOKOT</text>
+   <text fill="#24595b" fill-opacity="0.57" font-family="Serif" font-size="27" id="svg_13" letter-spacing="35" stroke="url(#svg_3)" stroke-width="0" text-anchor="middle" textLength="0" word-spacing="0" x="280" xml:space="preserve" y="256">WOKOT</text>
+   <text fill="#8e0000" fill-opacity="0.82" font-family="Serif" font-size="27" id="svg_14" letter-spacing="35" stroke="url(#svg_3)" stroke-width="0" text-anchor="middle" textLength="0" word-spacing="0" x="279" xml:space="preserve" y="254">WOKOT</text>
+   <text fill="#bc0b0b" fill-opacity="0.77" font-family="Serif" font-size="26.59" id="svg_15" letter-spacing="35" stroke="url(#svg_3)" stroke-width="0" text-anchor="middle" textLength="0" word-spacing="0" x="277" xml:space="preserve" y="254">WOKOT</text>
+   <text fill="#253fc4" fill-opacity="0.55" font-family="Serif" font-size="27" id="svg_16" letter-spacing="35" stroke="url(#svg_3)" stroke-width="0" text-anchor="middle" textLength="0" word-spacing="0" x="305" xml:space="preserve" y="273">WOKOT</text>
+   <text fill="#253fc4" fill-opacity="0.55" font-family="Serif" font-size="27" id="svg_17" letter-spacing="35" stroke="url(#svg_3)" stroke-width="0" text-anchor="middle" textLength="0" word-spacing="0" x="305" xml:space="preserve" y="273">WOKOT</text>
+   <text fill="#253fc4" fill-opacity="0.55" font-family="Serif" font-size="27" id="svg_18" letter-spacing="35" stroke="url(#svg_3)" stroke-width="0" text-anchor="middle" textLength="0" word-spacing="0" x="305" xml:space="preserve" y="273">WOKOT</text>
+   <text fill="#0bba62" fill-opacity="0.88" font-family="Serif" font-size="26.59" id="svg_19" letter-spacing="35" stroke="url(#svg_3)" stroke-width="0" text-anchor="middle" textLength="0" word-spacing="0" x="277" xml:space="preserve" y="256">WOKOT</text>
+   <text fill="#23dd7d" fill-opacity="0.88" font-family="Serif" font-size="37.68" id="svg_20" letter-spacing="39" stroke="url(#svg_3)" stroke-width="0" text-anchor="middle" textLength="0" word-spacing="0" x="279.5" xml:space="preserve" y="256">WOKOT</text>
+   <ellipse cx="242" cy="117.74" fill="url(#svg_32)" fill-opacity="0.11" id="svg_36" rx="90" ry="20.26" stroke="#ff00ff" stroke-opacity="0" stroke-width="44"/>
+   <ellipse cx="276" cy="122.74" fill="url(#svg_32)" fill-opacity="0.11" id="svg_37" rx="90" ry="20.26" stroke="#ff00ff" stroke-opacity="0" stroke-width="44"/>
+   <ellipse cx="247" cy="118.24" fill="url(#svg_32)" fill-opacity="0.11" id="svg_38" rx="36" ry="8.76" stroke="#ff00ff" stroke-opacity="0" stroke-width="44"/>
+  </g>
+ </g>
+</svg>
