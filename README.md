@@ -1,6 +1,10 @@
 # Wokot Engine
 
-\[insert logo of retribution\]
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/wokotengine/wokot/blob/bb3da2fc8da74a2b88d9925f595673a727cd6b04/wokot_logo_20250330.svg">
+  <source media="(prefers-color-scheme: light)" srcset="[https://user-images.githubusercontent.com/25423296/163456779-a8556205-d0a5-45e2-ac17-42d089e3c3f8.png](https://github.com/wokotengine/wokot/blob/bb3da2fc8da74a2b88d9925f595673a727cd6b04/wokot_logo_20250330.svg)">
+  <img alt="The Wokot logo." src="[https://user-images.githubusercontent.com/25423296/163456779-a8556205-d0a5-45e2-ac17-42d089e3c3f8.png](https://github.com/wokotengine/wokot/blob/bb3da2fc8da74a2b88d9925f595673a727cd6b04/wokot_logo_20250330.svg)">
+</picture>
 
 ## Anti-bigotry cross-platform game engine
 
