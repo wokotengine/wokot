@@ -117,6 +117,7 @@ public:
 		SCENE_NAME_CASING_PASCAL_CASE,
 		SCENE_NAME_CASING_SNAKE_CASE,
 		SCENE_NAME_CASING_KEBAB_CASE,
+		SCENE_NAME_CASING_CAMEL_CASE,
 	};
 
 	enum ActionOnPlay {
@@ -356,6 +357,7 @@ private:
 	ConfirmationDialog *save_confirmation = nullptr;
 	ConfirmationDialog *import_confirmation = nullptr;
 	ConfirmationDialog *pick_main_scene = nullptr;
+	ConfirmationDialog *open_project_settings = nullptr;
 	Button *select_current_scene_button = nullptr;
 	AcceptDialog *accept = nullptr;
 	AcceptDialog *save_accept = nullptr;
@@ -384,6 +386,7 @@ private:
 	EditorFileDialog *file_export_lib = nullptr;
 	EditorFileDialog *file_script = nullptr;
 	EditorFileDialog *file_android_build_source = nullptr;
+	EditorFileDialog *file_pack_zip = nullptr;
 	String current_path;
 	MenuButton *update_spinner = nullptr;
 
@@ -962,6 +965,7 @@ public:
 	Vector<Ref<EditorResourceConversionPlugin>> find_resource_conversion_plugin_for_type_name(const String &p_type);
 
 	bool ensure_main_scene(bool p_from_native);
+	bool validate_custom_directory();
 };
 
 class EditorPluginList : public Object {

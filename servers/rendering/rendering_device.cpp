@@ -1108,6 +1108,7 @@ RID RenderingDevice::texture_create_shared(const TextureView &p_view, RID p_with
 	// Create view.
 
 	Texture texture = *src_texture;
+	texture.slice_trackers = nullptr;
 	texture.shared_fallback = nullptr;
 
 	RDD::TextureView tv;
@@ -1165,8 +1166,6 @@ RID RenderingDevice::texture_create_shared(const TextureView &p_view, RID p_with
 	}
 
 	ERR_FAIL_COND_V(!texture.driver_id, RID());
-
-	texture.slice_trackers.clear();
 
 	if (texture.draw_tracker != nullptr) {
 		texture.draw_tracker->reference_count++;
@@ -1262,6 +1261,7 @@ RID RenderingDevice::texture_create_shared_from_slice(const TextureView &p_view,
 	}
 
 	Texture texture = *src_texture;
+	texture.slice_trackers = nullptr;
 	texture.shared_fallback = nullptr;
 
 	get_image_format_required_size(texture.format, texture.width, texture.height, texture.depth, p_mipmap + 1, &texture.width, &texture.height);
@@ -2759,6 +2759,10 @@ void RenderingDevice::_vrs_detect_method() {
 		default:
 			break;
 	}
+}
+
+RD::VRSMethod RenderingDevice::vrs_get_method() const {
+	return vrs_method;
 }
 
 RD::DataFormat RenderingDevice::vrs_get_format() const {
@@ -4407,7 +4411,7 @@ RenderingDevice::DrawListID RenderingDevice::draw_list_begin(RID p_framebuffer, 
 	thread_local LocalVector<RDD::RenderPassClearValue> clear_values;
 	thread_local LocalVector<RDG::ResourceTracker *> resource_trackers;
 	thread_local LocalVector<RDG::ResourceUsage> resource_usages;
-	BitField<RDD::PipelineStageBits> stages;
+	BitField<RDD::PipelineStageBits> stages = {};
 	operations.resize(framebuffer->texture_ids.size());
 	clear_values.resize(framebuffer->texture_ids.size());
 	resource_trackers.clear();
@@ -5869,9 +5873,12 @@ bool RenderingDevice::_texture_make_mutable(Texture *p_texture, RID p_texture_id
 					p_texture->draw_tracker->reference_count++;
 				} else {
 					// Slice texture.
-					HashMap<Rect2i, RDG::ResourceTracker *>::ConstIterator draw_tracker_iterator = owner_texture->slice_trackers.find(p_texture->slice_rect);
+					if (owner_texture->slice_trackers == nullptr) {
+						owner_texture->slice_trackers = memnew((HashMap<Rect2i, RDG::ResourceTracker *>));
+					}
+					HashMap<Rect2i, RDG::ResourceTracker *>::ConstIterator draw_tracker_iterator = owner_texture->slice_trackers->find(p_texture->slice_rect);
 					RDG::ResourceTracker *draw_tracker = nullptr;
-					if (draw_tracker_iterator != owner_texture->slice_trackers.end()) {
+					if (draw_tracker_iterator != owner_texture->slice_trackers->end()) {
 						// Reuse the tracker at the matching rectangle.
 						draw_tracker = draw_tracker_iterator->value;
 					} else {
@@ -5883,10 +5890,9 @@ bool RenderingDevice::_texture_make_mutable(Texture *p_texture, RID p_texture_id
 						draw_tracker->texture_subresources = p_texture->barrier_range();
 						draw_tracker->texture_usage = p_texture->usage_flags;
 						draw_tracker->texture_slice_or_dirty_rect = p_texture->slice_rect;
-						owner_texture->slice_trackers[p_texture->slice_rect] = draw_tracker;
+						(*owner_texture->slice_trackers)[p_texture->slice_rect] = draw_tracker;
 					}
 
-					p_texture->slice_trackers.clear();
 					p_texture->draw_tracker = draw_tracker;
 					p_texture->draw_tracker->reference_count++;
 				}
@@ -6045,8 +6051,13 @@ void RenderingDevice::_free_internal(RID p_id) {
 				if (texture->owner.is_valid() && (texture->slice_type != TEXTURE_SLICE_MAX)) {
 					// If this was a texture slice, erase the tracker from the map.
 					Texture *owner_texture = texture_owner.get_or_null(texture->owner);
-					if (owner_texture != nullptr) {
-						owner_texture->slice_trackers.erase(texture->slice_rect);
+					if (owner_texture != nullptr && owner_texture->slice_trackers != nullptr) {
+						owner_texture->slice_trackers->erase(texture->slice_rect);
+
+						if (owner_texture->slice_trackers->is_empty()) {
+							memdelete(owner_texture->slice_trackers);
+							owner_texture->slice_trackers = nullptr;
+						}
 					}
 				}
 			}
@@ -6694,7 +6705,7 @@ Error RenderingDevice::initialize(RenderingContextDriver *p_context, DisplayServ
 	// Pick the main queue family. It is worth noting we explicitly do not request the transfer bit, as apparently the specification defines
 	// that the existence of either the graphics or compute bit implies that the queue can also do transfer operations, but it is optional
 	// to indicate whether it supports them or not with the dedicated transfer bit if either is set.
-	BitField<RDD::CommandQueueFamilyBits> main_queue_bits;
+	BitField<RDD::CommandQueueFamilyBits> main_queue_bits = {};
 	main_queue_bits.set_flag(RDD::COMMAND_QUEUE_FAMILY_GRAPHICS_BIT);
 	main_queue_bits.set_flag(RDD::COMMAND_QUEUE_FAMILY_COMPUTE_BIT);
 
@@ -6839,7 +6850,7 @@ Error RenderingDevice::initialize(RenderingContextDriver *p_context, DisplayServ
 		// Only the instance that is not a local device and is also the singleton is allowed to manage a pipeline cache.
 		pipeline_cache_file_path = vformat("user://vulkan/pipelines.%s.%s",
 				OS::get_singleton()->get_current_rendering_method(),
-				device.name.validate_filename().replace(" ", "_").to_lower());
+				device.name.validate_filename().replace_char(' ', '_').to_lower());
 		if (Engine::get_singleton()->is_editor_hint()) {
 			pipeline_cache_file_path += ".editor";
 		}
@@ -6922,7 +6933,7 @@ void RenderingDevice::_save_pipeline_cache(void *p_data) {
 	Vector<uint8_t> cache_blob = self->driver->pipeline_cache_serialize();
 	self->_thread_safe_.unlock();
 
-	if (cache_blob.size() == 0) {
+	if (cache_blob.is_empty()) {
 		return;
 	}
 	print_verbose(vformat("Updated PSO cache (%.1f MiB)", cache_blob.size() / (1024.0f * 1024.0f)));

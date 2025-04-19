@@ -126,6 +126,7 @@ class ProjectManager : public Control {
 	// Project list.
 
 	VBoxContainer *empty_list_placeholder = nullptr;
+	RichTextLabel *empty_list_message = nullptr;
 	Button *empty_list_create_project = nullptr;
 	Button *empty_list_import_project = nullptr;
 	Button *empty_list_open_assetlib = nullptr;
@@ -138,6 +139,7 @@ class ProjectManager : public Control {
 
 	LineEdit *search_box = nullptr;
 	Label *loading_label = nullptr;
+	Label *sort_label = nullptr;
 	OptionButton *filter_option = nullptr;
 	PanelContainer *project_list_panel = nullptr;
 
