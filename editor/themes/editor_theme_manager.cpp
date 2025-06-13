@@ -44,6 +44,7 @@
 #include "scene/resources/style_box_flat.h"
 #include "scene/resources/style_box_line.h"
 #include "scene/resources/style_box_texture.h"
+#include "scene/resources/svg_texture.h"
 #include "scene/resources/texture.h"
 
 // Theme configuration.
@@ -72,7 +73,7 @@ uint32_t EditorThemeManager::ThemeConfiguration::hash() {
 	hash = hash_murmur3_one_float(relationship_line_opacity, hash);
 	hash = hash_murmur3_one_32(thumb_size, hash);
 	hash = hash_murmur3_one_32(class_icon_size, hash);
-	hash = hash_murmur3_one_32((int)increase_scrollbar_touch_area, hash);
+	hash = hash_murmur3_one_32((int)enable_touch_optimizations, hash);
 	hash = hash_murmur3_one_float(gizmo_handle_scale, hash);
 	hash = hash_murmur3_one_32(color_picker_button_height, hash);
 	hash = hash_murmur3_one_float(subresource_hue_tint, hash);
@@ -245,7 +246,7 @@ EditorThemeManager::ThemeConfiguration EditorThemeManager::_create_theme_config(
 	config.relationship_line_opacity = EDITOR_GET("interface/theme/relationship_line_opacity");
 	config.thumb_size = EDITOR_GET("filesystem/file_dialog/thumbnail_size");
 	config.class_icon_size = 16 * EDSCALE;
-	config.increase_scrollbar_touch_area = EDITOR_GET("interface/touchscreen/increase_scrollbar_touch_area");
+	config.enable_touch_optimizations = EDITOR_GET("interface/touchscreen/enable_touch_optimizations");
 	config.gizmo_handle_scale = EDITOR_GET("interface/touchscreen/scale_gizmo_handles");
 	config.color_picker_button_height = 28 * EDSCALE;
 	config.subresource_hue_tint = EDITOR_GET("docks/property_editor/subresource_hue_tint");
@@ -303,8 +304,8 @@ EditorThemeManager::ThemeConfiguration EditorThemeManager::_create_theme_config(
 				preset_contrast = -0.06;
 			} else if (config.preset == "Solarized (Dark)") {
 				preset_accent_color = Color(0.15, 0.55, 0.82);
-				preset_base_color = Color(0.04, 0.23, 0.27);
-				preset_contrast = config.default_contrast;
+				preset_base_color = Color(0.03, 0.21, 0.26);
+				preset_contrast = 0.23;
 			} else if (config.preset == "Solarized (Light)") {
 				preset_accent_color = Color(0.15, 0.55, 0.82);
 				preset_base_color = Color(0.89, 0.86, 0.79);
@@ -471,7 +472,7 @@ void EditorThemeManager::_create_shared_styles(const Ref<EditorTheme> &p_theme, 
 		p_config.font_hover_pressed_color = p_config.font_hover_color.lerp(p_config.accent_color, 0.74);
 		p_config.font_disabled_color = Color(p_config.mono_color.r, p_config.mono_color.g, p_config.mono_color.b, 0.35);
 		p_config.font_readonly_color = Color(p_config.mono_color.r, p_config.mono_color.g, p_config.mono_color.b, 0.65);
-		p_config.font_placeholder_color = Color(p_config.mono_color.r, p_config.mono_color.g, p_config.mono_color.b, 0.6);
+		p_config.font_placeholder_color = Color(p_config.mono_color.r, p_config.mono_color.g, p_config.mono_color.b, 0.5);
 		p_config.font_outline_color = Color(0, 0, 0, 0);
 
 		p_theme->set_color(SceneStringName(font_color), EditorStringName(Editor), p_config.font_color);
@@ -1436,7 +1437,7 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 
 		// HScrollBar.
 
-		if (p_config.increase_scrollbar_touch_area) {
+		if (p_config.enable_touch_optimizations) {
 			p_theme->set_stylebox("scroll", "HScrollBar", make_line_stylebox(p_config.separator_color, 50));
 		} else {
 			p_theme->set_stylebox("scroll", "HScrollBar", make_stylebox(p_theme->get_icon(SNAME("GuiScrollBg"), EditorStringName(EditorIcons)), 5, 5, 5, 5, -5, 1, -5, 1));
@@ -1455,7 +1456,7 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 
 		// VScrollBar.
 
-		if (p_config.increase_scrollbar_touch_area) {
+		if (p_config.enable_touch_optimizations) {
 			p_theme->set_stylebox("scroll", "VScrollBar", make_line_stylebox(p_config.separator_color, 50, 1, 1, true));
 		} else {
 			p_theme->set_stylebox("scroll", "VScrollBar", make_stylebox(p_theme->get_icon(SNAME("GuiScrollBg"), EditorStringName(EditorIcons)), 5, 5, 5, 5, 1, -5, 1, -5));
@@ -1724,7 +1725,7 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 			p_theme->set_constant("port_h_offset", "GraphNode", 1);
 			p_theme->set_constant("separation", "GraphNode", 1 * EDSCALE);
 
-			Ref<ImageTexture> port_icon = p_theme->get_icon(SNAME("GuiGraphNodePort"), EditorStringName(EditorIcons));
+			Ref<SVGTexture> port_icon = p_theme->get_icon(SNAME("GuiGraphNodePort"), EditorStringName(EditorIcons));
 			// The true size is 24x24 This is necessary for sharp port icons at high zoom levels in GraphEdit (up to ~200%).
 			port_icon->set_size_override(Size2(12, 12));
 			p_theme->set_icon("port", "GraphNode", port_icon);
@@ -1820,6 +1821,7 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 		p_theme->set_icon("bar_arrow", "ColorPicker", p_theme->get_icon(SNAME("ColorPickerBarArrow"), EditorStringName(EditorIcons)));
 		p_theme->set_icon("picker_cursor", "ColorPicker", p_theme->get_icon(SNAME("PickerCursor"), EditorStringName(EditorIcons)));
 		p_theme->set_icon("picker_cursor_bg", "ColorPicker", p_theme->get_icon(SNAME("PickerCursorBg"), EditorStringName(EditorIcons)));
+		p_theme->set_icon("color_script", "ColorPicker", p_theme->get_icon(SNAME("Script"), EditorStringName(EditorIcons)));
 
 		// ColorPickerButton.
 		p_theme->set_icon("bg", "ColorPickerButton", p_theme->get_icon(SNAME("GuiMiniCheckerboard"), EditorStringName(EditorIcons)));
@@ -1955,6 +1957,18 @@ void EditorThemeManager::_populate_editor_styles(const Ref<EditorTheme> &p_theme
 		p_theme->set_stylebox("disabled", "RunBarButton", menu_transparent_style);
 		p_theme->set_stylebox(SceneStringName(pressed), "RunBarButton", menu_transparent_style);
 
+		p_theme->set_type_variation("RunBarButtonMovieMakerDisabled", "RunBarButton");
+		p_theme->set_color("icon_normal_color", "RunBarButtonMovieMakerDisabled", Color(1, 1, 1, 0.7));
+		p_theme->set_color("icon_pressed_color", "RunBarButtonMovieMakerDisabled", Color(1, 1, 1, 0.84));
+		p_theme->set_color("icon_hover_color", "RunBarButtonMovieMakerDisabled", Color(1, 1, 1, 0.9));
+		p_theme->set_color("icon_hover_pressed_color", "RunBarButtonMovieMakerDisabled", Color(1, 1, 1, 0.84));
+
+		p_theme->set_type_variation("RunBarButtonMovieMakerEnabled", "RunBarButton");
+		p_theme->set_color("icon_normal_color", "RunBarButtonMovieMakerEnabled", Color(0, 0, 0, 0.7));
+		p_theme->set_color("icon_pressed_color", "RunBarButtonMovieMakerEnabled", Color(0, 0, 0, 0.84));
+		p_theme->set_color("icon_hover_color", "RunBarButtonMovieMakerEnabled", Color(0, 0, 0, 0.9));
+		p_theme->set_color("icon_hover_pressed_color", "RunBarButtonMovieMakerEnabled", Color(0, 0, 0, 0.84));
+
 		// Bottom panel.
 		Ref<StyleBoxFlat> style_bottom_panel = p_config.content_panel_style->duplicate();
 		style_bottom_panel->set_corner_radius_all(p_config.corner_radius * EDSCALE);
@@ -2017,12 +2031,6 @@ void EditorThemeManager::_populate_editor_styles(const Ref<EditorTheme> &p_theme
 		style_write_movie_button->set_content_margin(SIDE_RIGHT, 0);
 		style_write_movie_button->set_expand_margin(SIDE_RIGHT, 2 * EDSCALE);
 		p_theme->set_stylebox("MovieWriterButtonPressed", EditorStringName(EditorStyles), style_write_movie_button);
-
-		// Movie writer button colors.
-		p_theme->set_color("movie_writer_icon_normal", EditorStringName(EditorStyles), Color(1, 1, 1, 0.7));
-		p_theme->set_color("movie_writer_icon_pressed", EditorStringName(EditorStyles), Color(0, 0, 0, 0.84));
-		p_theme->set_color("movie_writer_icon_hover", EditorStringName(EditorStyles), Color(1, 1, 1, 0.9));
-		p_theme->set_color("movie_writer_icon_hover_pressed", EditorStringName(EditorStyles), Color(0, 0, 0, 0.84));
 
 		// Profiler autostart indicator panel.
 		Ref<StyleBoxFlat> style_profiler_autostart = style_launch_pad->duplicate();
@@ -2725,7 +2733,7 @@ void EditorThemeManager::_generate_text_editor_defaults(ThemeConfiguration &p_co
 }
 
 void EditorThemeManager::_populate_text_editor_styles(const Ref<EditorTheme> &p_theme, ThemeConfiguration &p_config) {
-	String text_editor_color_theme = EditorSettings::get_singleton()->get("text_editor/theme/color_theme");
+	String text_editor_color_theme = EDITOR_GET("text_editor/theme/color_theme");
 	if (text_editor_color_theme == "Default") {
 		_generate_text_editor_defaults(p_config);
 	} else if (text_editor_color_theme == "Godot 2") {

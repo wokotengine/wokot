@@ -48,23 +48,30 @@
 #ifdef TOOLS_ENABLED
 #include "core/config/project_settings.h"
 #include "editor/editor_file_system.h"
+#include "editor/editor_node.h"
 #include "editor/editor_settings.h"
+#include "editor/editor_string_names.h"
 #endif
 
-void GDScriptLanguage::get_comment_delimiters(List<String> *p_delimiters) const {
-	p_delimiters->push_back("#");
+Vector<String> GDScriptLanguage::get_comment_delimiters() const {
+	static const Vector<String> delimiters = { "#" };
+	return delimiters;
 }
 
-void GDScriptLanguage::get_doc_comment_delimiters(List<String> *p_delimiters) const {
-	p_delimiters->push_back("##");
+Vector<String> GDScriptLanguage::get_doc_comment_delimiters() const {
+	static const Vector<String> delimiters = { "##" };
+	return delimiters;
 }
 
-void GDScriptLanguage::get_string_delimiters(List<String> *p_delimiters) const {
-	p_delimiters->push_back("\" \"");
-	p_delimiters->push_back("' '");
-	p_delimiters->push_back("\"\"\" \"\"\"");
-	p_delimiters->push_back("''' '''");
+Vector<String> GDScriptLanguage::get_string_delimiters() const {
+	static const Vector<String> delimiters = {
+		"\" \"",
+		"' '",
+		"\"\"\" \"\"\"",
+		"''' '''",
+	};
 	// NOTE: StringName, NodePath and r-strings are not listed here.
+	return delimiters;
 }
 
 bool GDScriptLanguage::is_using_templates() {
@@ -144,8 +151,6 @@ bool GDScriptLanguage::validate(const String &p_script, const String &p_path, Li
 			ScriptLanguage::Warning w;
 			w.start_line = warn.start_line;
 			w.end_line = warn.end_line;
-			w.leftmost_column = warn.leftmost_column;
-			w.rightmost_column = warn.rightmost_column;
 			w.code = (int)warn.code;
 			w.string_code = GDScriptWarning::get_name_from_code(warn.code);
 			w.message = warn.get_message();
@@ -177,7 +182,7 @@ bool GDScriptLanguage::validate(const String &p_script, const String &p_path, Li
 			}
 		}
 		return false;
-	} else {
+	} else if (r_functions) {
 		const GDScriptParser::ClassNode *cl = parser.get_tree();
 		HashMap<int, String> funcs;
 
@@ -773,7 +778,7 @@ static String _make_arguments_hint(const MethodInfo &p_info, int p_arg_idx, bool
 		if (p_arg_idx >= p_info.arguments.size()) {
 			arghint += String::chr(0xFFFF);
 		}
-		arghint += "...";
+		arghint += "...args: Array"; // `MethodInfo` does not support the rest parameter name.
 		if (p_arg_idx >= p_info.arguments.size()) {
 			arghint += String::chr(0xFFFF);
 		}
@@ -791,9 +796,9 @@ static String _make_arguments_hint(const GDScriptParser::FunctionNode *p_functio
 		arghint = "(";
 	} else {
 		if (p_function->get_datatype().builtin_type == Variant::NIL) {
-			arghint = "void " + p_function->identifier->name.operator String() + "(";
+			arghint = "void " + p_function->identifier->name + "(";
 		} else {
-			arghint = p_function->get_datatype().to_string() + " " + p_function->identifier->name.operator String() + "(";
+			arghint = p_function->get_datatype().to_string() + " " + p_function->identifier->name + "(";
 		}
 	}
 
@@ -861,6 +866,20 @@ static String _make_arguments_hint(const GDScriptParser::FunctionNode *p_functio
 			arghint += " = " + def_val;
 		}
 		if (i == p_arg_idx) {
+			arghint += String::chr(0xFFFF);
+		}
+	}
+
+	if (p_function->is_vararg()) {
+		if (!p_function->parameters.is_empty()) {
+			arghint += ", ";
+		}
+		if (p_arg_idx >= p_function->parameters.size()) {
+			arghint += String::chr(0xFFFF);
+		}
+		const GDScriptParser::ParameterNode *rest_param = p_function->rest_parameter;
+		arghint += "..." + rest_param->identifier->name + ": " + rest_param->get_datatype().to_string();
+		if (p_arg_idx >= p_function->parameters.size()) {
 			arghint += String::chr(0xFFFF);
 		}
 	}
@@ -941,6 +960,19 @@ static void _find_annotation_arguments(const GDScriptParser::AnnotationNode *p_a
 			ScriptLanguage::CodeCompletionOption option(E, ScriptLanguage::CODE_COMPLETION_KIND_CLASS);
 			option.insert_text = option.display.quote(p_quote_style);
 			r_result.insert(option.display, option);
+		}
+	} else if (p_annotation->name == SNAME("@export_tool_button")) {
+		if (p_argument == 1) {
+			const Ref<Theme> theme = EditorNode::get_singleton()->get_editor_theme();
+			if (theme.is_valid()) {
+				List<StringName> icon_list;
+				theme->get_icon_list(EditorStringName(EditorIcons), &icon_list);
+				for (const StringName &E : icon_list) {
+					ScriptLanguage::CodeCompletionOption option(E, ScriptLanguage::CODE_COMPLETION_KIND_CLASS);
+					option.insert_text = option.display.quote(p_quote_style);
+					r_result.insert(option.display, option);
+				}
+			}
 		}
 	} else if (p_annotation->name == SNAME("@export_custom")) {
 		switch (p_argument) {
@@ -1491,7 +1523,7 @@ static void _find_identifiers(const GDScriptParser::CompletionContext &p_context
 
 	static const char *_keywords_with_space[] = {
 		"and", "not", "or", "in", "as", "class", "class_name", "extends", "is", "func", "signal", "await",
-		"const", "enum", "static", "var", "if", "elif", "else", "for", "match", "when", "while",
+		"const", "enum", "abstract", "static", "var", "if", "elif", "else", "for", "match", "when", "while",
 		nullptr
 	};
 
@@ -1524,7 +1556,6 @@ static void _find_identifiers(const GDScriptParser::CompletionContext &p_context
 
 	for (const StringName &util_func_name : utility_func_names) {
 		ScriptLanguage::CodeCompletionOption option(util_func_name, ScriptLanguage::CODE_COMPLETION_KIND_FUNCTION);
-		option.insert_text += "(";
 		if (p_add_braces) {
 			option.insert_text += "(";
 			option.display += U"(\u2026)"; // As all utility functions contain an argument or more, this is hardcoded here.
@@ -3517,9 +3548,29 @@ static void _find_call_arguments(GDScriptParser::CompletionContext &p_context, c
 		} break;
 		case GDScriptParser::COMPLETION_OVERRIDE_METHOD: {
 			GDScriptParser::DataType native_type = completion_context.current_class->base_type;
+			GDScriptParser::FunctionNode *function_node = static_cast<GDScriptParser::FunctionNode *>(completion_context.node);
+			bool is_static = function_node != nullptr && function_node->is_static;
 			while (native_type.is_set() && native_type.kind != GDScriptParser::DataType::NATIVE) {
 				switch (native_type.kind) {
 					case GDScriptParser::DataType::CLASS: {
+						for (const GDScriptParser::ClassNode::Member &member : native_type.class_type->members) {
+							if (member.type != GDScriptParser::ClassNode::Member::FUNCTION) {
+								continue;
+							}
+
+							if (options.has(member.function->identifier->name) || completion_context.current_class->has_function(member.function->identifier->name)) {
+								continue;
+							}
+
+							if (is_static != member.function->is_static) {
+								continue;
+							}
+
+							String display_name = member.function->identifier->name;
+							display_name += member.function->signature + ":";
+							ScriptLanguage::CodeCompletionOption option(display_name, ScriptLanguage::CODE_COMPLETION_KIND_FUNCTION);
+							options.insert(member.function->identifier->name, option); // Insert name instead of display to track duplicates.
+						}
 						native_type = native_type.class_type->base_type;
 					} break;
 					default: {
@@ -3540,17 +3591,20 @@ static void _find_call_arguments(GDScriptParser::CompletionContext &p_context, c
 			bool use_type_hint = EditorSettings::get_singleton()->get_setting("text_editor/completion/add_type_hints").operator bool();
 
 			List<MethodInfo> virtual_methods;
-			ClassDB::get_virtual_methods(class_name, &virtual_methods);
-
-			{
+			if (is_static) {
 				// Not truly a virtual method, but can also be "overridden".
 				MethodInfo static_init("_static_init");
 				static_init.return_val.type = Variant::NIL;
 				static_init.flags |= METHOD_FLAG_STATIC | METHOD_FLAG_VIRTUAL;
 				virtual_methods.push_back(static_init);
+			} else {
+				ClassDB::get_virtual_methods(class_name, &virtual_methods);
 			}
 
 			for (const MethodInfo &mi : virtual_methods) {
+				if (options.has(mi.name) || completion_context.current_class->has_function(mi.name)) {
+					continue;
+				}
 				String method_hint = mi.name;
 				if (method_hint.contains_char(':')) {
 					method_hint = method_hint.get_slicec(':', 0);
@@ -3568,6 +3622,15 @@ static void _find_call_arguments(GDScriptParser::CompletionContext &p_context, c
 					method_hint += arg;
 					if (use_type_hint) {
 						method_hint += ": " + _get_visual_datatype(mi.arguments[i], true, class_name);
+					}
+				}
+				if (mi.flags & METHOD_FLAG_VARARG) {
+					if (!mi.arguments.is_empty()) {
+						method_hint += ", ";
+					}
+					method_hint += "...args"; // `MethodInfo` does not support the rest parameter name.
+					if (use_type_hint) {
+						method_hint += ": Array";
 					}
 				}
 				method_hint += ")";

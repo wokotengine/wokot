@@ -30,11 +30,12 @@
 
 #pragma once
 
-#include "editor/add_metadata_dialog.h"
 #include "editor_property_name_processor.h"
 #include "scene/gui/box_container.h"
+#include "scene/gui/panel_container.h"
 #include "scene/gui/scroll_container.h"
 
+class AddMetadataDialog;
 class AcceptDialog;
 class Button;
 class ConfirmationDialog;
@@ -64,6 +65,7 @@ public:
 		MENU_COPY_VALUE,
 		MENU_PASTE_VALUE,
 		MENU_COPY_PROPERTY_PATH,
+		MENU_OVERRIDE_FOR_PROJECT,
 		MENU_FAVORITE_PROPERTY,
 		MENU_PIN_VALUE,
 		MENU_DELETE,
@@ -146,6 +148,7 @@ private:
 
 protected:
 	bool has_borders = false;
+	bool can_override = false;
 
 	void _notification(int p_what);
 	static void _bind_methods();
@@ -305,24 +308,51 @@ class EditorInspectorCategory : public Control {
 	// Right-click context menu options.
 	enum ClassMenuOption {
 		MENU_OPEN_DOCS,
+		MENU_UNFAVORITE_ALL,
 	};
+
+	struct ThemeCache {
+		int horizontal_separation = 0;
+		int vertical_separation = 0;
+		int class_icon_size = 0;
+
+		Color font_color;
+
+		Ref<Font> bold_font;
+		int bold_font_size = 0;
+
+		Ref<Texture2D> icon_favorites;
+		Ref<Texture2D> icon_unfavorite;
+		Ref<Texture2D> icon_help;
+
+		Ref<StyleBox> background;
+	} theme_cache;
+
+	PropertyInfo info;
 
 	Ref<Texture2D> icon;
 	String label;
 	String doc_class_name;
 	PopupMenu *menu = nullptr;
 	bool is_favorite = false;
+	bool menu_icon_dirty = true;
 
 	void _handle_menu_option(int p_option);
+	void _popup_context_menu(const Point2i &p_position);
+	void _update_icon();
 
 protected:
+	static void _bind_methods();
+
 	void _notification(int p_what);
 	virtual void gui_input(const Ref<InputEvent> &p_event) override;
 
 	void _accessibility_action_menu(const Variant &p_data);
 
 public:
-	void set_as_favorite(EditorInspector *p_for_inspector);
+	void set_as_favorite();
+	void set_property_info(const PropertyInfo &p_info);
+	void set_doc_class_name(const String &p_name);
 
 	virtual Size2 get_minimum_size() const override;
 	virtual Control *make_custom_tooltip(const String &p_text) const override;
@@ -333,22 +363,65 @@ public:
 class EditorInspectorSection : public Container {
 	GDCLASS(EditorInspectorSection, Container);
 
+	friend class EditorInspector;
+
 	String label;
 	String section;
-	bool vbox_added = false; // Optimization.
 	Color bg_color;
+	bool vbox_added = false; // Optimization.
 	bool foldable = false;
+	bool checkable = false;
+	bool checked = false;
 	int indent_depth = 0;
 	int level = 1;
+	String related_enable_property;
 
 	Timer *dropping_unfold_timer = nullptr;
 	bool dropping_for_unfold = false;
+
+	Rect2 check_rect;
+	bool check_hover = false;
+
+	bool hide_feature = false;
 
 	HashSet<StringName> revertable_properties;
 
 	void _test_unfold();
 	int _get_header_height();
 	Ref<Texture2D> _get_arrow();
+	Ref<Texture2D> _get_checkbox();
+
+	EditorInspector *_get_parent_inspector() const;
+
+	struct ThemeCache {
+		int horizontal_separation = 0;
+		int vertical_separation = 0;
+		int inspector_margin = 0;
+		int indent_size = 0;
+
+		Color warning_color;
+		Color prop_subsection;
+		Color font_color;
+		Color font_disabled_color;
+		Color font_hover_color;
+		Color font_pressed_color;
+		Color font_hover_pressed_color;
+
+		Ref<Font> font;
+		int font_size = 0;
+		Ref<Font> bold_font;
+		int bold_font_size = 0;
+		Ref<Font> light_font;
+		int light_font_size = 0;
+
+		Ref<Texture2D> arrow;
+		Ref<Texture2D> arrow_collapsed;
+		Ref<Texture2D> arrow_collapsed_mirrored;
+		Ref<Texture2D> icon_gui_checked;
+		Ref<Texture2D> icon_gui_unchecked;
+
+		Ref<StyleBoxFlat> indent_box;
+	} theme_cache;
 
 protected:
 	Object *object = nullptr;
@@ -363,6 +436,7 @@ protected:
 
 public:
 	virtual Size2 get_minimum_size() const override;
+	virtual Control *make_custom_tooltip(const String &p_text) const override;
 
 	void setup(const String &p_section, const String &p_label, Object *p_object, const Color &p_bg_color, bool p_foldable, int p_indent_depth = 0, int p_level = 1);
 	String get_section() const;
@@ -372,9 +446,12 @@ public:
 	void fold();
 	void set_bg_color(const Color &p_bg_color);
 	void reset_timer();
+	void set_checkable(const String &p_related_check_property, bool p_hide_feature);
+	void set_checked(bool p_checked);
 
 	bool has_revertable_properties() const;
 	void property_can_revert_changed(const String &p_path, bool p_can_revert);
+	void _property_edited(const String &p_property);
 
 	EditorInspectorSection();
 	~EditorInspectorSection();
@@ -535,7 +612,6 @@ public:
 class EditorInspector : public ScrollContainer {
 	GDCLASS(EditorInspector, ScrollContainer);
 
-	friend class EditorInspectorCategory;
 	friend class EditorPropertyResource;
 
 	enum {
@@ -544,15 +620,18 @@ class EditorInspector : public ScrollContainer {
 	static Ref<EditorInspectorPlugin> inspector_plugins[MAX_PLUGINS];
 	static int inspector_plugin_count;
 
-	// Right-click context menu options.
-	enum ClassMenuOption {
-		MENU_UNFAVORITE_ALL,
-	};
+	struct ThemeCache {
+		int vertical_separation = 0;
+		Color prop_subsection;
+		Ref<Texture2D> icon_add;
+	} theme_cache;
+
+	EditorInspectorSection::ThemeCache section_theme_cache;
+	EditorInspectorCategory::ThemeCache category_theme_cache;
 
 	bool can_favorite = false;
 	PackedStringArray current_favorites;
 	VBoxContainer *favorites_section = nullptr;
-	EditorInspectorCategory *favorites_category = nullptr;
 	VBoxContainer *favorites_vbox = nullptr;
 	VBoxContainer *favorites_groups_vbox = nullptr;
 	HSeparator *favorites_separator = nullptr;
@@ -591,6 +670,7 @@ class EditorInspector : public ScrollContainer {
 	bool keying = false;
 	bool wide_editors = false;
 	bool deletable_properties = false;
+	bool mark_unsaved = true;
 
 	float refresh_countdown;
 	bool update_tree_pending = false;
@@ -656,6 +736,8 @@ class EditorInspector : public ScrollContainer {
 
 	bool _is_property_disabled_by_feature_profile(const StringName &p_property);
 
+	void _section_toggled_by_user(const String &p_path, bool p_value);
+
 	AddMetadataDialog *add_meta_dialog = nullptr;
 	LineEdit *add_meta_name = nullptr;
 	OptionButton *add_meta_type = nullptr;
@@ -664,7 +746,7 @@ class EditorInspector : public ScrollContainer {
 	void _add_meta_confirm();
 	void _show_add_meta_dialog();
 
-	void _handle_menu_option(int p_option);
+	static EditorInspector *_get_control_parent_inspector(Control *p_control);
 
 protected:
 	static void _bind_methods();
@@ -678,6 +760,9 @@ public:
 
 	static EditorProperty *instantiate_property_editor(Object *p_object, const Variant::Type p_type, const String &p_path, const PropertyHint p_hint, const String &p_hint_text, const uint32_t p_usage, const bool p_wide = false);
 
+	static void initialize_section_theme(EditorInspectorSection::ThemeCache &p_cache, Control *p_control);
+	static void initialize_category_theme(EditorInspectorCategory::ThemeCache &p_cache, Control *p_control);
+
 	bool is_main_editor_inspector() const;
 	String get_selected_path() const;
 
@@ -689,6 +774,7 @@ public:
 
 	void set_keying(bool p_active);
 	void set_read_only(bool p_read_only);
+	void set_mark_unsaved(bool p_mark) { mark_unsaved = p_mark; }
 
 	EditorPropertyNameProcessor::Style get_property_name_style() const;
 	void set_property_name_style(EditorPropertyNameProcessor::Style p_style);

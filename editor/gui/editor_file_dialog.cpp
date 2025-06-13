@@ -45,17 +45,12 @@
 #include "scene/gui/flow_container.h"
 #include "scene/gui/grid_container.h"
 #include "scene/gui/label.h"
+#include "scene/gui/line_edit.h"
 #include "scene/gui/option_button.h"
 #include "scene/gui/separator.h"
 #include "scene/gui/split_container.h"
 #include "scene/gui/texture_rect.h"
 #include "servers/display_server.h"
-
-EditorFileDialog::GetIconFunc EditorFileDialog::get_icon_func = nullptr;
-EditorFileDialog::GetIconFunc EditorFileDialog::get_thumbnail_func = nullptr;
-
-EditorFileDialog::RegisterFunc EditorFileDialog::register_func = nullptr;
-EditorFileDialog::RegisterFunc EditorFileDialog::unregister_func = nullptr;
 
 void EditorFileDialog::_native_popup() {
 	// Show native dialog directly.
@@ -978,35 +973,6 @@ void EditorFileDialog::update_file_name() {
 	}
 }
 
-// TODO: Could use a unit test.
-Color EditorFileDialog::get_dir_icon_color(const String &p_dir_path) {
-	if (!FileSystemDock::get_singleton()) { // This dialog can be called from the project manager.
-		return theme_cache.folder_icon_color;
-	}
-
-	const HashMap<String, Color> &folder_colors = FileSystemDock::get_singleton()->get_folder_colors();
-	Dictionary assigned_folder_colors = FileSystemDock::get_singleton()->get_assigned_folder_colors();
-
-	Color folder_icon_color = theme_cache.folder_icon_color;
-
-	// Check for a folder color to inherit (if one is assigned).
-	String parent_dir = ProjectSettings::get_singleton()->localize_path(p_dir_path);
-	while (!parent_dir.is_empty() && parent_dir != "res://") {
-		if (!parent_dir.ends_with("/")) {
-			parent_dir += "/";
-		}
-		if (assigned_folder_colors.has(parent_dir)) {
-			folder_icon_color = folder_colors[assigned_folder_colors[parent_dir]];
-			if (folder_icon_color != theme_cache.folder_icon_color) {
-				break;
-			}
-		}
-		parent_dir = parent_dir.trim_suffix("/").get_base_dir();
-	}
-
-	return folder_icon_color;
-}
-
 // DO NOT USE THIS FUNCTION UNLESS NEEDED, CALL INVALIDATE() INSTEAD.
 void EditorFileDialog::update_file_list() {
 	int thumbnail_size = EDITOR_GET("filesystem/file_dialog/thumbnail_size");
@@ -1160,7 +1126,7 @@ void EditorFileDialog::update_file_list() {
 			d["bundle"] = bundle;
 
 			item_list->set_item_metadata(-1, d);
-			item_list->set_item_icon_modulate(-1, get_dir_icon_color(String(d["path"])));
+			item_list->set_item_icon_modulate(-1, FileSystemDock::get_dir_icon_color(String(d["path"]), theme_cache.folder_icon_color));
 		}
 
 		dirs.pop_front();
@@ -1424,9 +1390,9 @@ void EditorFileDialog::set_current_file(const String &p_file) {
 	file->set_text(p_file);
 	update_dir();
 	invalidate();
-	_focus_file_text();
 
 	if (is_visible()) {
+		_focus_file_text();
 		_request_single_thumbnail(get_current_dir().path_join(get_current_file()));
 	}
 }
@@ -1845,7 +1811,7 @@ void EditorFileDialog::_update_favorites() {
 		favorites->add_item(favorited_names[i], theme_cache.folder);
 		favorites->set_item_tooltip(-1, favorited_paths[i]);
 		favorites->set_item_metadata(-1, favorited_paths[i]);
-		favorites->set_item_icon_modulate(-1, get_dir_icon_color(favorited_paths[i]));
+		favorites->set_item_icon_modulate(-1, FileSystemDock::get_dir_icon_color(favorited_paths[i], theme_cache.folder_icon_color));
 
 		if (i == current_favorite) {
 			favorite->set_pressed(true);
@@ -1930,7 +1896,7 @@ void EditorFileDialog::_update_recent() {
 		recent->add_item(recentd_names[i], theme_cache.folder);
 		recent->set_item_tooltip(-1, recentd_paths[i]);
 		recent->set_item_metadata(-1, recentd_paths[i]);
-		recent->set_item_icon_modulate(-1, get_dir_icon_color(recentd_paths[i]));
+		recent->set_item_icon_modulate(-1, FileSystemDock::get_dir_icon_color(recentd_paths[i], theme_cache.folder_icon_color));
 	}
 
 	if (modified) {
@@ -1982,10 +1948,6 @@ void EditorFileDialog::_go_forward() {
 	dir_prev->set_disabled(local_history_pos == 0);
 	dir_next->set_disabled(local_history_pos == local_history.size() - 1);
 }
-
-bool EditorFileDialog::default_show_hidden_files = false;
-
-EditorFileDialog::DisplayMode EditorFileDialog::default_display_mode = DISPLAY_THUMBNAILS;
 
 void EditorFileDialog::set_display_mode(DisplayMode p_mode) {
 	if (display_mode == p_mode) {
@@ -2061,7 +2023,6 @@ void EditorFileDialog::_update_option_controls() {
 		} else {
 			Label *lbl = memnew(Label);
 			lbl->set_text(opt.name);
-			lbl->set_focus_mode(Control::FOCUS_NONE);
 			grid_select_options->add_child(lbl);
 
 			OptionButton *ob = memnew(OptionButton);
@@ -2230,7 +2191,7 @@ void EditorFileDialog::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "display_mode", PROPERTY_HINT_ENUM, "Thumbnails,List"), "set_display_mode", "get_display_mode");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "file_mode", PROPERTY_HINT_ENUM, "Open one,Open many,Open folder,Open any,Save"), "set_file_mode", "get_file_mode");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "current_dir", PROPERTY_HINT_DIR, "", PROPERTY_USAGE_NONE), "set_current_dir", "get_current_dir");
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "current_file", PROPERTY_HINT_FILE, "*", PROPERTY_USAGE_NONE), "set_current_file", "get_current_file");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "current_file", PROPERTY_HINT_FILE_PATH, "*", PROPERTY_USAGE_NONE), "set_current_file", "get_current_file");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "current_path", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NONE), "set_current_path", "get_current_path");
 	ADD_PROPERTY(PropertyInfo(Variant::PACKED_STRING_ARRAY, "filters"), "set_filters", "get_filters");
 	ADD_ARRAY_COUNT("Options", "option_count", "set_option_count", "get_option_count", "option_");
@@ -2428,7 +2389,6 @@ EditorFileDialog::EditorFileDialog() {
 	dir_up->connect(SceneStringName(pressed), callable_mp(this, &EditorFileDialog::_go_up));
 
 	Label *l = memnew(Label(TTRC("Path:")));
-	l->set_focus_mode(Control::FOCUS_NONE);
 	l->set_theme_type_variation("HeaderSmall");
 	pathhb->add_child(l);
 
@@ -2504,7 +2464,6 @@ EditorFileDialog::EditorFileDialog() {
 	fav_vb->add_child(fav_hb);
 
 	l = memnew(Label(TTRC("Favorites:")));
-	l->set_focus_mode(Control::FOCUS_NONE);
 	l->set_theme_type_variation("HeaderSmall");
 	fav_hb->add_child(l);
 
@@ -2555,7 +2514,6 @@ EditorFileDialog::EditorFileDialog() {
 	lower_hb->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 
 	l = memnew(Label(TTRC("Directories & Files:")));
-	l->set_focus_mode(Control::FOCUS_NONE);
 	l->set_theme_type_variation("HeaderSmall");
 	l->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 
@@ -2665,7 +2623,6 @@ EditorFileDialog::EditorFileDialog() {
 	file_box = memnew(HBoxContainer);
 
 	l = memnew(Label(TTRC("File:")));
-	l->set_focus_mode(Control::FOCUS_NONE);
 	l->set_theme_type_variation("HeaderSmall");
 	file_box->add_child(l);
 

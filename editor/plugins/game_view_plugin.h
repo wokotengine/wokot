@@ -37,7 +37,7 @@
 #include "scene/debugger/scene_debugger.h"
 #include "scene/gui/box_container.h"
 
-class EmbeddedProcess;
+class EmbeddedProcessBase;
 class VSeparator;
 class WindowWrapper;
 class ScriptEditorDebugger;
@@ -60,10 +60,25 @@ private:
 
 	void _feature_profile_changed();
 
+	struct ScreenshotCB {
+		Callable cb;
+		Rect2i rect;
+	};
+
+	int64_t scr_rq_id = 0;
+	HashMap<uint64_t, ScreenshotCB> screenshot_callbacks;
+
+	bool _msg_get_screenshot(const Array &p_args);
+
 protected:
 	static void _bind_methods();
 
 public:
+	virtual bool capture(const String &p_message, const Array &p_data, int p_session) override;
+	virtual bool has_capture(const String &p_capture) const override;
+
+	bool add_screenshot_callback(const Callable &p_callaback, const Rect2i &p_rect);
+
 	void set_suspend(bool p_enabled);
 	void next_frame();
 
@@ -154,13 +169,15 @@ class GameView : public VBoxContainer {
 	MenuButton *embed_options_menu = nullptr;
 	Label *game_size_label = nullptr;
 	Panel *panel = nullptr;
-	EmbeddedProcess *embedded_process = nullptr;
+	EmbeddedProcessBase *embedded_process = nullptr;
 	Label *state_label = nullptr;
 
 	void _sessions_changed();
 
 	void _update_debugger_buttons();
 
+	void _handle_shortcut_requested(int p_embed_action);
+	void _toggle_suspend_button();
 	void _suspend_button_toggled(bool p_pressed);
 
 	void _node_type_pressed(int p_option);
@@ -171,6 +188,8 @@ class GameView : public VBoxContainer {
 	void _play_pressed();
 	static void _instance_starting_static(int p_idx, List<String> &r_arguments);
 	void _instance_starting(int p_idx, List<String> &r_arguments);
+	static bool _instance_rq_screenshot_static(const Callable &p_callback);
+	bool _instance_rq_screenshot(const Callable &p_callback);
 	void _stop_pressed();
 	void _embedding_completed();
 	void _embedding_failed();
@@ -212,11 +231,11 @@ public:
 	void set_window_layout(Ref<ConfigFile> p_layout);
 	void get_window_layout(Ref<ConfigFile> p_layout);
 
-	GameView(Ref<GameViewDebugger> p_debugger, WindowWrapper *p_wrapper);
+	GameView(Ref<GameViewDebugger> p_debugger, EmbeddedProcessBase *p_embedded_process, WindowWrapper *p_wrapper);
 };
 
-class GameViewPlugin : public EditorPlugin {
-	GDCLASS(GameViewPlugin, EditorPlugin);
+class GameViewPluginBase : public EditorPlugin {
+	GDCLASS(GameViewPluginBase, EditorPlugin);
 
 #ifndef ANDROID_ENABLED
 	GameView *game_view = nullptr;
@@ -236,6 +255,9 @@ class GameViewPlugin : public EditorPlugin {
 
 protected:
 	void _notification(int p_what);
+#ifndef ANDROID_ENABLED
+	void setup(Ref<GameViewDebugger> p_debugger, EmbeddedProcessBase *p_embedded_process);
+#endif
 
 public:
 	virtual String get_plugin_name() const override { return TTRC("Game"); }
@@ -252,6 +274,12 @@ public:
 	virtual void set_window_layout(Ref<ConfigFile> p_layout) override;
 	virtual void get_window_layout(Ref<ConfigFile> p_layout) override;
 #endif // ANDROID_ENABLED
+	GameViewPluginBase();
+};
 
+class GameViewPlugin : public GameViewPluginBase {
+	GDCLASS(GameViewPlugin, GameViewPluginBase);
+
+public:
 	GameViewPlugin();
 };

@@ -82,6 +82,7 @@ class ViewportRotationControl : public Control {
 	Vector<Color> axis_colors;
 	Vector<int> axis_menu_options;
 	Vector2i orbiting_mouse_start;
+	Point2 original_mouse_pos;
 	int orbiting_index = -1;
 	int focused_axis = -2;
 	bool gizmo_activated = false;
@@ -181,14 +182,12 @@ class Node3DEditorViewport : public Control {
 	};
 
 public:
-	enum {
-		GIZMO_BASE_LAYER = 27,
-		GIZMO_EDIT_LAYER = 26,
-		GIZMO_GRID_LAYER = 25,
-		MISC_TOOL_LAYER = 24,
+	static constexpr int32_t GIZMO_BASE_LAYER = 27;
+	static constexpr int32_t GIZMO_EDIT_LAYER = 26;
+	static constexpr int32_t GIZMO_GRID_LAYER = 25;
+	static constexpr int32_t MISC_TOOL_LAYER = 24;
 
-		FRAME_TIME_HISTORY = 20,
-	};
+	static constexpr int32_t FRAME_TIME_HISTORY = 20;
 
 	enum NavigationScheme {
 		NAVIGATION_GODOT = 0,
@@ -245,6 +244,7 @@ private:
 
 	EditorSelection *editor_selection = nullptr;
 
+	Button *translation_preview_button = nullptr;
 	CheckBox *preview_camera = nullptr;
 	SubViewportContainer *subviewport_container = nullptr;
 

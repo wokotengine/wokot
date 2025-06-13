@@ -90,9 +90,6 @@ public:
 	virtual bool get_is_sample() const override;
 	virtual Ref<AudioSamplePlayback> get_sample_playback() const override;
 	virtual void set_sample_playback(const Ref<AudioSamplePlayback> &p_playback) override;
-
-	AudioStreamPlaybackWAV();
-	~AudioStreamPlaybackWAV();
 };
 
 class AudioStreamWAV : public AudioStream {
@@ -127,6 +124,8 @@ private:
 	LocalVector<uint8_t> data;
 	uint32_t data_bytes = 0;
 
+	Dictionary tags;
+
 protected:
 	static void _bind_methods();
 
@@ -151,6 +150,9 @@ public:
 
 	void set_stereo(bool p_enable);
 	bool is_stereo() const;
+
+	void set_tags(const Dictionary &p_tags);
+	virtual Dictionary get_tags() const override;
 
 	virtual double get_length() const override; //if supported, otherwise return 0
 
@@ -287,9 +289,6 @@ public:
 			dst_ptr += qoa_encode_frame(data16.ptr(), p_desc, frame_len, dst_ptr);
 		}
 	}
-
-	AudioStreamWAV();
-	~AudioStreamWAV();
 };
 
 VARIANT_ENUM_CAST(AudioStreamWAV::Format)

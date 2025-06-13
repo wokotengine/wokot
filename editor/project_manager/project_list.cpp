@@ -323,6 +323,7 @@ void ProjectListItemControl::_bind_methods() {
 
 ProjectListItemControl::ProjectListItemControl() {
 	set_focus_mode(FocusMode::FOCUS_ALL);
+	set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 
 	VBoxContainer *favorite_box = memnew(VBoxContainer);
 	favorite_box->set_alignment(BoxContainer::ALIGNMENT_CENTER);
@@ -330,8 +331,9 @@ ProjectListItemControl::ProjectListItemControl() {
 
 	favorite_button = memnew(TextureButton);
 	favorite_button->set_name("FavoriteButton");
-	favorite_button->set_tooltip_text(TTR("Add to favorites"));
+	favorite_button->set_tooltip_text(TTRC("Add to favorites"));
 	favorite_button->set_accessibility_name(TTRC("Add to favorites"));
+	favorite_button->set_auto_translate_mode(AUTO_TRANSLATE_MODE_ALWAYS);
 	// This makes the project's "hover" style display correctly when hovering the favorite icon.
 	favorite_button->set_mouse_filter(MOUSE_FILTER_PASS);
 	favorite_box->add_child(favorite_button);
@@ -357,7 +359,7 @@ ProjectListItemControl::ProjectListItemControl() {
 		main_vbox->add_child(title_hb);
 
 		project_title = memnew(Label);
-		project_title->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
+		project_title->set_focus_mode(FOCUS_ACCESSIBILITY);
 		project_title->set_name("ProjectName");
 		project_title->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 		project_title->set_clip_text(true);
@@ -379,7 +381,8 @@ ProjectListItemControl::ProjectListItemControl() {
 
 		explore_button = memnew(Button);
 		explore_button->set_name("ExploreButton");
-		explore_button->set_tooltip_text(TTR("Open in file manager"));
+		explore_button->set_tooltip_auto_translate_mode(AUTO_TRANSLATE_MODE_ALWAYS);
+		explore_button->set_tooltip_text(TTRC("Open in file manager"));
 		explore_button->set_accessibility_name(TTRC("Open in file manager"));
 		explore_button->set_flat(true);
 		path_hb->add_child(explore_button);
@@ -387,6 +390,7 @@ ProjectListItemControl::ProjectListItemControl() {
 
 		project_path = memnew(Label);
 		project_path->set_name("ProjectPath");
+		project_path->set_focus_mode(FOCUS_ACCESSIBILITY);
 		project_path->set_structured_text_bidi_override(TextServer::STRUCTURED_TEXT_FILE);
 		project_path->set_clip_text(true);
 		project_path->set_h_size_flags(Control::SIZE_EXPAND_FILL);
@@ -400,13 +404,16 @@ ProjectListItemControl::ProjectListItemControl() {
 		project_unsupported_features->hide();
 
 		project_version = memnew(Label);
+		project_version->set_focus_mode(FOCUS_ACCESSIBILITY);
 		project_version->set_name("ProjectVersion");
 		project_version->set_mouse_filter(Control::MOUSE_FILTER_PASS);
 		path_hb->add_child(project_version);
 
 		last_edited_info = memnew(Label);
+		last_edited_info->set_focus_mode(FOCUS_ACCESSIBILITY);
 		last_edited_info->set_name("LastEditedInfo");
 		last_edited_info->set_mouse_filter(Control::MOUSE_FILTER_PASS);
+		last_edited_info->set_tooltip_auto_translate_mode(AUTO_TRANSLATE_MODE_ALWAYS);
 		last_edited_info->set_tooltip_text(TTRC("Last edited timestamp"));
 		last_edited_info->set_modulate(Color(1, 1, 1, 0.5));
 		path_hb->add_child(last_edited_info);
@@ -858,9 +865,8 @@ void ProjectList::find_projects_multiple(const PackedStringArray &p_paths) {
 }
 
 void ProjectList::load_project_list() {
-	List<String> sections;
 	_config.load(_config_path);
-	_config.get_sections(&sections);
+	Vector<String> sections = _config.get_sections();
 
 	for (const String &path : sections) {
 		bool favorite = _config.get_value(path, "favorite", false);
@@ -990,7 +996,7 @@ void ProjectList::_create_project_item_control(int p_index) {
 	hb->set_tags(item.tags, this);
 	hb->set_unsupported_features(item.unsupported_features.duplicate());
 	hb->set_project_version(item.project_version);
-	hb->set_last_edited_info(!item.missing ? Time::get_singleton()->get_datetime_string_from_unix_time(item.last_edited, true) : TTR("Missing Date"));
+	hb->set_last_edited_info(item.get_last_edited_string());
 
 	hb->set_is_favorite(item.favorite);
 	hb->set_is_missing(item.missing);

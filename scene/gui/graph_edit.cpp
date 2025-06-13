@@ -689,6 +689,7 @@ void GraphEdit::add_child_notify(Node *p_child) {
 		GraphNode *graph_node = Object::cast_to<GraphNode>(graph_element);
 		if (graph_node) {
 			graph_node->connect("slot_updated", callable_mp(this, &GraphEdit::_graph_node_slot_updated).bind(graph_element));
+			graph_node->connect("slot_sizes_changed", callable_mp(this, &GraphEdit::_graph_node_rect_changed).bind(graph_node));
 			graph_node->connect(SceneStringName(item_rect_changed), callable_mp(this, &GraphEdit::_graph_node_rect_changed).bind(graph_node));
 			_ensure_node_order_from(graph_node);
 		}
@@ -744,6 +745,7 @@ void GraphEdit::remove_child_notify(Node *p_child) {
 		GraphNode *graph_node = Object::cast_to<GraphNode>(graph_element);
 		if (graph_node) {
 			graph_node->disconnect("slot_updated", callable_mp(this, &GraphEdit::_graph_node_slot_updated));
+			graph_node->disconnect("slot_sizes_changed", callable_mp(this, &GraphEdit::_graph_node_rect_changed));
 			graph_node->disconnect(SceneStringName(item_rect_changed), callable_mp(this, &GraphEdit::_graph_node_rect_changed));
 
 			// Invalidate all adjacent connections, so that they are removed before the next redraw.
@@ -2261,6 +2263,10 @@ void GraphEdit::gui_input(const Ref<InputEvent> &p_ev) {
 		}
 	}
 
+	key_input(p_ev);
+}
+
+void GraphEdit::key_input(const Ref<InputEvent> &p_ev) {
 	if (p_ev->is_pressed()) {
 		if (p_ev->is_action("ui_graph_duplicate", true)) {
 			emit_signal(SNAME("duplicate_nodes_request"));
@@ -2428,8 +2434,8 @@ float GraphEdit::get_zoom() const {
 }
 
 void GraphEdit::set_zoom_step(float p_zoom_step) {
-	p_zoom_step = abs(p_zoom_step);
-	ERR_FAIL_COND(!isfinite(p_zoom_step));
+	p_zoom_step = std::abs(p_zoom_step);
+	ERR_FAIL_COND(!std::isfinite(p_zoom_step));
 	if (zoom_step == p_zoom_step) {
 		return;
 	}
@@ -3123,6 +3129,13 @@ void GraphEdit::_bind_methods() {
 
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, GraphEdit, port_hotzone_inner_extent);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, GraphEdit, port_hotzone_outer_extent);
+
+	ADD_CLASS_DEPENDENCY("Button");
+	ADD_CLASS_DEPENDENCY("GraphFrame");
+	ADD_CLASS_DEPENDENCY("GraphNode");
+	ADD_CLASS_DEPENDENCY("HScrollBar");
+	ADD_CLASS_DEPENDENCY("SpinBox");
+	ADD_CLASS_DEPENDENCY("VScrollBar");
 }
 
 GraphEdit::GraphEdit() {
@@ -3239,7 +3252,7 @@ GraphEdit::GraphEdit() {
 	toggle_grid_button->set_pressed(true);
 	toggle_grid_button->set_tooltip_text(ETR("Toggle the visual grid."));
 	toggle_grid_button->set_accessibility_name(ETR("Grid"));
-	toggle_grid_button->set_focus_mode(FOCUS_NONE);
+	toggle_grid_button->set_focus_mode(FOCUS_ACCESSIBILITY);
 	menu_hbox->add_child(toggle_grid_button);
 	toggle_grid_button->connect(SceneStringName(pressed), callable_mp(this, &GraphEdit::_show_grid_toggled));
 
@@ -3250,7 +3263,7 @@ GraphEdit::GraphEdit() {
 	toggle_snapping_button->set_tooltip_text(ETR("Toggle snapping to the grid."));
 	toggle_snapping_button->set_accessibility_name(ETR("Snap to Grid"));
 	toggle_snapping_button->set_pressed(snapping_enabled);
-	toggle_snapping_button->set_focus_mode(FOCUS_NONE);
+	toggle_snapping_button->set_focus_mode(FOCUS_ACCESSIBILITY);
 	menu_hbox->add_child(toggle_snapping_button);
 	toggle_snapping_button->connect(SceneStringName(pressed), callable_mp(this, &GraphEdit::_snapping_toggled));
 
@@ -3274,7 +3287,7 @@ GraphEdit::GraphEdit() {
 	minimap_button->set_tooltip_text(ETR("Toggle the graph minimap."));
 	minimap_button->set_accessibility_name(ETR("Minimap"));
 	minimap_button->set_pressed(show_grid);
-	minimap_button->set_focus_mode(FOCUS_NONE);
+	minimap_button->set_focus_mode(FOCUS_ACCESSIBILITY);
 	menu_hbox->add_child(minimap_button);
 	minimap_button->connect(SceneStringName(pressed), callable_mp(this, &GraphEdit::_minimap_toggled));
 
@@ -3283,7 +3296,7 @@ GraphEdit::GraphEdit() {
 	arrange_button->set_visible(show_arrange_button);
 	arrange_button->set_accessibility_name(ETR("Auto Arrange"));
 	arrange_button->connect(SceneStringName(pressed), callable_mp(this, &GraphEdit::arrange_nodes));
-	arrange_button->set_focus_mode(FOCUS_NONE);
+	arrange_button->set_focus_mode(FOCUS_ACCESSIBILITY);
 	menu_hbox->add_child(arrange_button);
 	arrange_button->set_tooltip_text(ETR("Automatically arrange selected nodes."));
 

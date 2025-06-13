@@ -41,6 +41,7 @@
 #include "editor/themes/editor_scale.h"
 #include "editor/themes/editor_theme_manager.h"
 #include "scene/gui/dialogs.h"
+#include "scene/gui/line_edit.h"
 #include "scene/gui/separator.h"
 #include "scene/gui/tree.h"
 
@@ -275,6 +276,7 @@ ReplicationEditor::ReplicationEditor() {
 	vb->add_child(tree);
 
 	drop_label = memnew(Label);
+	drop_label->set_focus_mode(FOCUS_ACCESSIBILITY);
 	drop_label->set_text(TTR("Add properties using the options above, or\ndrag them from the inspector and drop them here."));
 	drop_label->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_CENTER);
 	drop_label->set_vertical_alignment(VERTICAL_ALIGNMENT_CENTER);
@@ -338,7 +340,7 @@ void ReplicationEditor::_drop_data_fw(const Point2 &p_point, const Variant &p_da
 		return;
 	}
 
-	String path = root->get_path_to(node);
+	String path = String(root->get_path_to(node));
 	path += ":" + String(d["property"]);
 
 	_add_sync_property(path);
@@ -388,7 +390,7 @@ void ReplicationEditor::_add_pressed() {
 		return;
 	}
 
-	_add_sync_property(path);
+	_add_sync_property(String(path));
 }
 
 void ReplicationEditor::_np_text_submitted(const String &p_newtext) {

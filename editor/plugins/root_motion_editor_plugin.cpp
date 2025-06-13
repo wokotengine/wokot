@@ -166,7 +166,7 @@ void EditorPropertyRootMotion::_node_clear() {
 
 void EditorPropertyRootMotion::update_property() {
 	NodePath p = get_edited_property_value();
-	assign->set_tooltip_text(p);
+	assign->set_tooltip_text(String(p));
 	if (p == NodePath()) {
 		assign->set_button_icon(Ref<Texture2D>());
 		assign->set_text(TTR("Assign..."));
@@ -175,7 +175,7 @@ void EditorPropertyRootMotion::update_property() {
 	}
 
 	assign->set_button_icon(Ref<Texture2D>());
-	assign->set_text(p);
+	assign->set_text(String(p));
 }
 
 void EditorPropertyRootMotion::setup(const NodePath &p_base_hint) {
@@ -184,7 +184,6 @@ void EditorPropertyRootMotion::setup(const NodePath &p_base_hint) {
 
 void EditorPropertyRootMotion::_notification(int p_what) {
 	switch (p_what) {
-		case NOTIFICATION_ENTER_TREE:
 		case NOTIFICATION_THEME_CHANGED: {
 			Ref<Texture2D> t = get_editor_theme_icon(SNAME("Clear"));
 			clear->set_button_icon(t);

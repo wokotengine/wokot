@@ -246,7 +246,7 @@ void EditorSpinSlider::_value_input_gui_input(const Ref<InputEvent> &p_event) {
 				if (step < 1) {
 					double divisor = 1.0 / step;
 
-					if (trunc(divisor) == divisor) {
+					if (std::trunc(divisor) == divisor) {
 						step = 1.0;
 					}
 				}
@@ -453,7 +453,7 @@ void EditorSpinSlider::_draw_spin_slider() {
 void EditorSpinSlider::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE: {
-			grabbing_spinner_speed = EditorSettings::get_singleton()->get("interface/inspector/float_drag_speed");
+			grabbing_spinner_speed = EDITOR_GET("interface/inspector/float_drag_speed");
 			_update_value_input_stylebox();
 		} break;
 

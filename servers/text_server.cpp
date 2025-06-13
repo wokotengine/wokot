@@ -31,6 +31,7 @@
 #include "servers/text_server.h"
 #include "text_server.compat.inc"
 
+#include "core/config/project_settings.h"
 #include "core/variant/typed_array.h"
 #include "servers/rendering_server.h"
 
@@ -1238,6 +1239,7 @@ CaretInfo TextServer::shaped_text_get_carets(const RID &p_shaped, int64_t p_posi
 	real_t height = (ascent + descent) / 2;
 
 	real_t off = 0.0f;
+	real_t obj_off = -1.0f;
 	CaretInfo caret;
 	caret.l_dir = DIRECTION_AUTO;
 	caret.t_dir = DIRECTION_AUTO;
@@ -1247,6 +1249,11 @@ CaretInfo TextServer::shaped_text_get_carets(const RID &p_shaped, int64_t p_posi
 
 	for (int i = 0; i < v_size; i++) {
 		if (glyphs[i].count > 0) {
+			// Skip inline objects.
+			if ((glyphs[i].flags & GRAPHEME_IS_EMBEDDED_OBJECT) == GRAPHEME_IS_EMBEDDED_OBJECT && glyphs[i].start == glyphs[i].end) {
+				obj_off = glyphs[i].advance;
+				continue;
+			}
 			// Caret before grapheme (top / left).
 			if (p_position == glyphs[i].start && ((glyphs[i].flags & GRAPHEME_IS_VIRTUAL) != GRAPHEME_IS_VIRTUAL)) {
 				real_t advance = 0.f;
@@ -1335,6 +1342,7 @@ CaretInfo TextServer::shaped_text_get_carets(const RID &p_shaped, int64_t p_posi
 						cr.size.y = char_adv;
 					}
 				}
+				cr.position.x += MAX(0.0, obj_off); // Prevent split caret when on an inline object.
 				caret.l_caret = cr;
 			}
 			// Caret inside grapheme (middle).
@@ -1371,6 +1379,10 @@ CaretInfo TextServer::shaped_text_get_carets(const RID &p_shaped, int64_t p_posi
 			}
 		}
 		off += glyphs[i].advance * glyphs[i].repeat;
+		if (obj_off >= 0.0) {
+			off += obj_off;
+			obj_off = -1.0;
+		}
 	}
 	return caret;
 }
@@ -2335,6 +2347,17 @@ bool TextServer::is_valid_letter(uint64_t p_unicode) const {
 }
 
 TextServer::TextServer() {
+	// Default font rendering related project settings.
+
+	GLOBAL_DEF_RST(PropertyInfo(Variant::INT, "gui/theme/default_font_antialiasing", PROPERTY_HINT_ENUM, "None,Grayscale,LCD Subpixel", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_RESTART_IF_CHANGED), 1);
+	GLOBAL_DEF_RST(PropertyInfo(Variant::INT, "gui/theme/default_font_hinting", PROPERTY_HINT_ENUM, "None,Light,Normal", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_RESTART_IF_CHANGED), TextServer::HINTING_LIGHT);
+	GLOBAL_DEF_RST(PropertyInfo(Variant::INT, "gui/theme/default_font_subpixel_positioning", PROPERTY_HINT_ENUM, "Disabled,Auto,One Half of a Pixel,One Quarter of a Pixel", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_RESTART_IF_CHANGED), TextServer::SUBPIXEL_POSITIONING_AUTO);
+
+	GLOBAL_DEF_RST("gui/theme/default_font_multichannel_signed_distance_field", false);
+	GLOBAL_DEF_RST("gui/theme/default_font_generate_mipmaps", false);
+
+	GLOBAL_DEF(PropertyInfo(Variant::INT, "gui/theme/lcd_subpixel_layout", PROPERTY_HINT_ENUM, "Disabled,Horizontal RGB,Horizontal BGR,Vertical RGB,Vertical BGR"), 1);
+
 	_init_diacritics_map();
 }
 

@@ -40,13 +40,6 @@
 #include "core/os/os.h"
 #include "core/os/time.h"
 
-FileAccess::CreateFunc FileAccess::create_func[ACCESS_MAX] = {};
-
-FileAccess::FileCloseFailNotify FileAccess::close_fail_notify = nullptr;
-
-bool FileAccess::backup_save = false;
-thread_local Error FileAccess::last_file_open_error = OK;
-
 Ref<FileAccess> FileAccess::create(AccessType p_access) {
 	ERR_FAIL_INDEX_V(p_access, ACCESS_MAX, nullptr);
 	ERR_FAIL_NULL_V(create_func[p_access], nullptr);
@@ -265,7 +258,12 @@ String FileAccess::fix_path(const String &p_path) const {
 		case ACCESS_RESOURCES: {
 			if (ProjectSettings::get_singleton()) {
 				if (r_path.begins_with("uid://")) {
-					r_path = ResourceUID::uid_to_path(r_path);
+					ResourceUID::ID uid = ResourceUID::get_singleton()->text_to_id(r_path);
+					if (ResourceUID::get_singleton()->has_id(uid)) {
+						r_path = ResourceUID::get_singleton()->get_id_path(uid);
+					} else {
+						r_path.clear();
+					}
 				}
 
 				if (r_path.begins_with("res://")) {
@@ -422,17 +420,17 @@ class CharBuffer {
 	char stack_buffer[256];
 
 	char *buffer = nullptr;
-	int capacity = 0;
-	int written = 0;
+	int64_t capacity = 0;
+	int64_t written = 0;
 
 	bool grow() {
-		if (vector.resize(next_power_of_2(1 + written)) != OK) {
+		if (vector.resize(next_power_of_2((uint64_t)1 + (uint64_t)written)) != OK) {
 			return false;
 		}
 
 		if (buffer == stack_buffer) { // first chunk?
 
-			for (int i = 0; i < written; i++) {
+			for (int64_t i = 0; i < written; i++) {
 				vector.write[i] = stack_buffer[i];
 			}
 		}
@@ -776,7 +774,7 @@ bool FileAccess::store_pascal_string(const String &p_string) {
 String FileAccess::get_pascal_string() {
 	uint32_t sl = get_32();
 	CharString cs;
-	cs.resize(sl + 1);
+	cs.resize_uninitialized(sl + 1);
 	get_buffer((uint8_t *)cs.ptr(), sl);
 	cs[sl] = 0;
 

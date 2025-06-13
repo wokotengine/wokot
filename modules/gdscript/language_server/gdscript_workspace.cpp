@@ -489,7 +489,8 @@ bool GDScriptWorkspace::can_rename(const LSP::TextDocumentPositionParams &p_doc_
 
 	String path = get_file_path(p_doc_pos.textDocument.uri);
 	if (const ExtendGDScriptParser *parser = get_parse_result(path)) {
-		parser->get_identifier_under_position(p_doc_pos.position, r_range);
+		// We only care about the range.
+		_ALLOW_DISCARD_ parser->get_identifier_under_position(p_doc_pos.position, r_range);
 		r_symbol = *reference_symbol;
 		return true;
 	}
@@ -624,7 +625,7 @@ Node *GDScriptWorkspace::_get_owner_scene_node(String p_path) {
 
 	for (const String &owner : owners) {
 		NodePath owner_path = owner;
-		Ref<Resource> owner_res = ResourceLoader::load(owner_path);
+		Ref<Resource> owner_res = ResourceLoader::load(String(owner_path));
 		if (Object::cast_to<PackedScene>(owner_res.ptr())) {
 			Ref<PackedScene> owner_packed_scene = Ref<PackedScene>(Object::cast_to<PackedScene>(*owner_res));
 			owner_scene_node = owner_packed_scene->instantiate();
@@ -847,9 +848,7 @@ Error GDScriptWorkspace::resolve_signature(const LSP::TextDocumentPositionParams
 	return ERR_METHOD_NOT_FOUND;
 }
 
-GDScriptWorkspace::GDScriptWorkspace() {
-	ProjectSettings::get_singleton()->get_resource_path();
-}
+GDScriptWorkspace::GDScriptWorkspace() {}
 
 GDScriptWorkspace::~GDScriptWorkspace() {
 	HashSet<String> cached_parsers;

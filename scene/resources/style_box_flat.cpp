@@ -40,6 +40,9 @@ float StyleBoxFlat::get_style_margin(Side p_side) const {
 }
 
 void StyleBoxFlat::_validate_property(PropertyInfo &p_property) const {
+	if (!Engine::get_singleton()->is_editor_hint()) {
+		return;
+	}
 	if (!anti_aliased && p_property.name == "anti_aliasing_size") {
 		p_property.usage = PROPERTY_USAGE_NO_EDITOR;
 	}
@@ -731,7 +734,3 @@ void StyleBoxFlat::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "anti_aliasing"), "set_anti_aliased", "is_anti_aliased");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "anti_aliasing_size", PROPERTY_HINT_RANGE, "0.01,10,0.001,suffix:px"), "set_aa_size", "get_aa_size");
 }
-
-StyleBoxFlat::StyleBoxFlat() {}
-
-StyleBoxFlat::~StyleBoxFlat() {}
