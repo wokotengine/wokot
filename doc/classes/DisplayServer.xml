@@ -2045,7 +2045,7 @@
 			<return type="void" />
 			<description>
 				Stops synthesis in progress and removes all utterances from the queue.
-				[b]Note:[/b] This method is implemented on Android, iOS, Web, Linux (X11/Linux), macOS, and Windows.
+				[b]Note:[/b] This method is implemented on Android, iOS, Web, Linux (X11/Wayland), macOS, and Windows.
 			</description>
 		</method>
 		<method name="unregister_additional_output">
@@ -2856,13 +2856,13 @@
 			Set scroll offset action, callback argument is set to [Vector2] with the scroll offset.
 		</constant>
 		<constant name="ACTION_SET_VALUE" value="20" enum="AccessibilityAction">
-			Set value action action, callback argument is set to [String] or number with the new value.
+			Set value action, callback argument is set to [String] or number with the new value.
 		</constant>
 		<constant name="ACTION_SHOW_CONTEXT_MENU" value="21" enum="AccessibilityAction">
 			Show context menu action, callback argument is not set.
 		</constant>
 		<constant name="ACTION_CUSTOM" value="22" enum="AccessibilityAction">
-			Custom action, callback argument is set to the integer action id.
+			Custom action, callback argument is set to the integer action ID.
 		</constant>
 		<constant name="LIVE_OFF" value="0" enum="AccessibilityLiveMode">
 			Indicates that updates to the live region should not be presented.
@@ -3054,6 +3054,7 @@
 		<constant name="WINDOW_MODE_EXCLUSIVE_FULLSCREEN" value="4" enum="WindowMode">
 			A single window full screen mode. This mode has less overhead, but only one window can be open on a given screen at a time (opening a child window or application switching will trigger a full screen transition).
 			Full screen window covers the entire display area of a screen and has no border or decorations. The display's video mode is not changed.
+			[b]Note:[/b] This mode might not work with screen recording software.
 			[b]On Android:[/b] This enables immersive mode.
 			[b]On Windows:[/b] Depending on video driver, full screen transition might cause screens to go black for a moment.
 			[b]On macOS:[/b] A new desktop is used to display the running project. Exclusive full screen mode prevents Dock and Menu from showing up when the mouse pointer is hovering the edge of the screen.
@@ -3097,7 +3098,7 @@
 		<constant name="WINDOW_FLAG_EXCLUDE_FROM_CAPTURE" value="9" enum="WindowFlags">
 			Window is excluded from screenshots taken by [method screen_get_image], [method screen_get_image_rect], and [method screen_get_pixel].
 			[b]Note:[/b] This flag is implemented on macOS and Windows.
-			[b]Note:[/b] Setting this flag will [b]NOT[/b] prevent other apps from capturing an image. It should not be used as a security measure.
+			[b]Note:[/b] Setting this flag will prevent standard screenshot methods from capturing a window image, but does [b]NOT[/b] guarantee that other apps won't be able to capture an image. It should not be used as a DRM or security measure.
 		</constant>
 		<constant name="WINDOW_FLAG_POPUP_WM_HINT" value="10" enum="WindowFlags">
 			Signals the window manager that this window is supposed to be an implementation-defined "popup" (usually a floating, borderless, untileable and immovable child window).

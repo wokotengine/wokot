@@ -256,7 +256,7 @@ def configure(env: "SConsEnvironment"):
         env.Append(CCFLAGS=["-sUSE_PTHREADS=1"])
         env.Append(LINKFLAGS=["-sUSE_PTHREADS=1"])
         env.Append(LINKFLAGS=["-sDEFAULT_PTHREAD_STACK_SIZE=%sKB" % env["default_pthread_stack_size"]])
-        env.Append(LINKFLAGS=["-sPTHREAD_POOL_SIZE='Module[\"emscriptenPoolSize\"]||8'"])
+        env.Append(LINKFLAGS=["-sPTHREAD_POOL_SIZE=\"Module['emscriptenPoolSize']||8\""])
         env.Append(LINKFLAGS=["-sWASM_MEM_MAX=2048MB"])
         if not env["dlink_enabled"]:
             # Workaround https://github.com/emscripten-core/emscripten/issues/21844#issuecomment-2116936414.
@@ -276,6 +276,7 @@ def configure(env: "SConsEnvironment"):
             print_warning("GDExtension support requires proxy_to_pthread=no, disabling proxy to pthread.")
             env["proxy_to_pthread"] = False
 
+        env.Append(CPPDEFINES=["WEB_DLINK_ENABLED"])
         env.Append(CCFLAGS=["-sSIDE_MODULE=2"])
         env.Append(LINKFLAGS=["-sSIDE_MODULE=2"])
         env.Append(CCFLAGS=["-fvisibility=hidden"])

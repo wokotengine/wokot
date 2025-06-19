@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  terminal_logger_apple_embedded.h                                      */
+/*  library_godot_emscripten.js                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,15 +28,17 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
+const GodotEmscripten = {
+	$GodotEmscripten__deps: ['$GodotRuntime'],
+	$GodotEmscripten: {},
 
-#ifdef APPLE_EMBEDDED_ENABLED
-
-#include "core/io/logger.h"
-
-class TerminalLoggerAppleEmbedded : public StdLogger {
-public:
-	virtual void log_error(const char *p_function, const char *p_file, int p_line, const char *p_code, const char *p_rationale, bool p_editor_notify = false, ErrorType p_type = ERR_ERROR, const Vector<Ref<ScriptBacktrace>> &p_script_backtraces = {}) override;
+	godot_js_emscripten_get_version__proxy: 'sync',
+	godot_js_emscripten_get_version__sig: 'p',
+	godot_js_emscripten_get_version: function () {
+		// WARNING: The caller needs to free the string pointer.
+		const emscriptenVersionPtr = GodotRuntime.allocString('{{{ EMSCRIPTEN_VERSION }}}');
+		return emscriptenVersionPtr;
+	},
 };
-
-#endif // APPLE_EMBEDDED_ENABLED
+autoAddDeps(GodotEmscripten, '$GodotEmscripten');
+addToLibrary(GodotEmscripten);

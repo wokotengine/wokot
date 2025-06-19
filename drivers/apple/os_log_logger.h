@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  terminal_logger_apple_embedded.mm                                     */
+/*  os_log_logger.h                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,33 +28,28 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#import "terminal_logger_apple_embedded.h"
+#pragma once
 
-#ifdef APPLE_EMBEDDED_ENABLED
+#include "core/io/logger.h"
 
-#import <os/log.h>
+#include <os/log.h>
 
-void TerminalLoggerAppleEmbedded::log_error(const char *p_function, const char *p_file, int p_line, const char *p_code, const char *p_rationale, bool p_editor_notify, ErrorType p_type, const Vector<Ref<ScriptBacktrace>> &p_script_backtraces) {
-	if (!should_log(true)) {
-		return;
-	}
+/**
+ * @brief Apple unified logging system integration for Godot Engine.
+ */
+class OsLogLogger : public Logger {
+	os_log_t log;
+	os_log_t error_log;
+	os_log_t warning_log;
+	os_log_t script_log;
+	os_log_t shader_log;
 
-	const char *err_details;
-	if (p_rationale && p_rationale[0]) {
-		err_details = p_rationale;
-	} else {
-		err_details = p_code;
-	}
+public:
+	void logv(const char *p_format, va_list p_list, bool p_err) override _PRINTF_FORMAT_ATTRIBUTE_2_0;
+	void log_error(const char *p_function, const char *p_file, int p_line, const char *p_code, const char *p_rationale, bool p_editor_notify = false, ErrorType p_type = ERR_ERROR, const Vector<Ref<ScriptBacktrace>> &p_script_backtraces = {}) override;
 
-	os_log_error(OS_LOG_DEFAULT,
-			"%{public}s: %{public}s\nat: %{public}s (%{public}s:%i)",
-			error_type_string(p_type), err_details, p_function, p_file, p_line);
-
-	for (const Ref<ScriptBacktrace> &backtrace : p_script_backtraces) {
-		if (!backtrace->is_empty()) {
-			os_log_error(OS_LOG_DEFAULT, "%{public}s", backtrace->format().utf8().get_data());
-		}
-	}
-}
-
-#endif // APPLE_EMBEDDED_ENABLED
+	/**
+	 * @brief Constructs an OsLogLogger with the specified subsystem identifier, which is normally the bundle identifier.
+	 */
+	OsLogLogger(const char *p_subsystem);
+};
