@@ -952,7 +952,7 @@ void Node::set_physics_interpolation_mode(PhysicsInterpolationMode p_mode) {
 }
 
 void Node::reset_physics_interpolation() {
-	if (is_inside_tree()) {
+	if (SceneTree::is_fti_enabled() && is_inside_tree()) {
 		propagate_notification(NOTIFICATION_RESET_PHYSICS_INTERPOLATION);
 
 		// If `reset_physics_interpolation()` is called explicitly by the user
@@ -2391,7 +2391,7 @@ bool Node::is_in_group(const StringName &p_identifier) const {
 
 void Node::add_to_group(const StringName &p_identifier, bool p_persistent) {
 	ERR_THREAD_GUARD
-	ERR_FAIL_COND(!p_identifier.operator String().length());
+	ERR_FAIL_COND_MSG(p_identifier.is_empty(), vformat("Cannot add node '%s' to a group with an empty name.", get_name()));
 
 	if (data.grouped.has(p_identifier)) {
 		return;
